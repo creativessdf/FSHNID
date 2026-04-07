@@ -1,0 +1,558 @@
+<div class="separator" style="clear: both;"><a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEheCiS8mB98uBQ4JN7ZbztKtJrmTCm2p95sNAPvIOtkE2End67nr6RTAISWLlxofkrk-WGgx4DRW48l80UTZ_lBGlVTY0iIVlHpe8w5o2hNM8elFyd1xpbF_iqUNDjLoYxM62YoYFYc32HwhyphenhyphenPi6gQnz3Xyj1P4WCw3vmpgJVzF_FybjSgtVSs4CPS6phNh/s736/Recent%20Work%20Diek%20Lthr.jfif" style="display: block; padding: 1em 0; text-align: center; "><img alt="" border="0" width="320" data-original-height="736" data-original-width="736" src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEheCiS8mB98uBQ4JN7ZbztKtJrmTCm2p95sNAPvIOtkE2End67nr6RTAISWLlxofkrk-WGgx4DRW48l80UTZ_lBGlVTY0iIVlHpe8w5o2hNM8elFyd1xpbF_iqUNDjLoYxM62YoYFYc32HwhyphenhyphenPi6gQnz3Xyj1P4WCw3vmpgJVzF_FybjSgtVSs4CPS6phNh/s320/Recent%20Work%20Diek%20Lthr.jfif"/></a></div><!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventaris Barang FSHN.ID</title>
+    <!-- Menggunakan Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Konfigurasi Tema Navy (Slate) -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            50: '#f0f4f8',
+                            100: '#d9e2ec',
+                            500: '#334e68',
+                            700: '#243b53',
+                            800: '#102a43',
+                            900: '#0b1c2c',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .btn-active { background-color: #243b53; border-left: 4px solid #60a5fa; }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen text-navy-800">
+
+    <!-- Loading Overlay -->
+    <div id="loading" class="fixed inset-0 bg-white/80 z-50 flex flex-col justify-center items-center hidden">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-700"></div>
+        <p class="mt-4 text-navy-700 font-medium">Memproses Data...</p>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed top-5 right-5 z-50 p-4 rounded-lg shadow-lg text-white font-medium transform transition-all duration-300 translate-x-full opacity-0"></div>
+
+    <div class="flex flex-col md:flex-row min-h-screen">
+        
+        <!-- Sidebar Menu -->
+        <aside class="w-full md:w-64 bg-navy-900 text-white flex-shrink-0">
+            <div class="p-6 border-b border-navy-700">
+                <h2 class="text-2xl font-bold text-blue-400">FSHN.ID</h2>
+                <p class="text-sm text-navy-100 mt-1">Sistem Manajemen Barang</p>
+            </div>
+            <nav class="mt-4 flex flex-col px-2 gap-1">
+                <button onclick="switchTab('dashboard', this)" class="nav-btn btn-active flex items-center w-full text-left px-4 py-3 rounded-md hover:bg-navy-800 transition">
+                    📊 Dashboard
+                </button>
+                <button onclick="switchTab('stokMasuk', this)" class="nav-btn flex items-center w-full text-left px-4 py-3 rounded-md hover:bg-navy-800 transition">
+                    📥 Input Stok Masuk
+                </button>
+                <button onclick="switchTab('barangKeluar', this)" class="nav-btn flex items-center w-full text-left px-4 py-3 rounded-md hover:bg-navy-800 transition">
+                    📤 Input Barang Keluar
+                </button>
+                <button onclick="switchTab('daftarBarang', this)" class="nav-btn flex items-center w-full text-left px-4 py-3 rounded-md hover:bg-navy-800 transition">
+                    📦 Daftar Barang
+                </button>
+                <button onclick="switchTab('pendapatan', this)" class="nav-btn flex items-center w-full text-left px-4 py-3 rounded-md hover:bg-navy-800 transition">
+                    💰 Total Pendapatan
+                </button>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+            
+            <!-- 1. DASHBOARD -->
+            <section id="dashboard" class="tab-content active">
+                <div class="mb-6 flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+                    <h3 class="text-2xl font-bold text-navy-800 mb-4 md:mb-0">Ringkasan Dashboard</h3>
+                    <div class="flex flex-col md:flex-row gap-2">
+                        <div>
+                            <label class="text-xs text-gray-500">Mulai Tanggal</label>
+                            <input type="date" id="dashStart" class="w-full border p-2 rounded text-sm focus:ring focus:ring-blue-200">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500">Sampai Tanggal</label>
+                            <input type="date" id="dashEnd" class="w-full border p-2 rounded text-sm focus:ring focus:ring-blue-200">
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="loadDashboard()" class="bg-navy-700 text-white px-4 py-2 rounded text-sm hover:bg-navy-800 w-full md:w-auto">Filter</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-green-500">
+                        <p class="text-sm text-gray-500 font-medium">Total Stok Masuk</p>
+                        <h4 class="text-4xl font-bold text-green-600 mt-2" id="dashTotalMasuk">0</h4>
+                        <p class="text-xs text-gray-400 mt-1">Berdasarkan filter tanggal</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-red-500">
+                        <p class="text-sm text-gray-500 font-medium">Total Barang Keluar</p>
+                        <h4 class="text-4xl font-bold text-red-600 mt-2" id="dashTotalKeluar">0</h4>
+                        <p class="text-xs text-gray-400 mt-1">Berdasarkan filter tanggal</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h4 class="text-lg font-bold text-navy-800 mb-4">🏆 Peringkat Barang Paling Banyak Keluar</h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-gray-50 text-gray-600 border-b">
+                                <tr>
+                                    <th class="p-3">Peringkat</th>
+                                    <th class="p-3">Kode Barang</th>
+                                    <th class="p-3">Nama Barang</th>
+                                    <th class="p-3">Total Keluar (Qty)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topItemsTbody" class="divide-y">
+                                <!-- Data diisi dari JS -->
+                                <tr><td colspan="4" class="p-3 text-center text-gray-500">Memuat data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. STOK MASUK -->
+            <section id="stokMasuk" class="tab-content">
+                <div class="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto">
+                    <h3 class="text-2xl font-bold text-navy-800 mb-6 border-b pb-2">Input Stok Masuk</h3>
+                    <form id="formMasuk" onsubmit="submitMasuk(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Masuk</label>
+                            <input type="date" id="inTanggal" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Kode Barang</label>
+                            <select id="inKode" onchange="autoFillNama('inKode', 'inNama')" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none bg-white">
+                                <option value="">-- Pilih Kode --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Barang (Otomatis)</label>
+                            <input type="text" id="inNama" readonly class="w-full bg-gray-100 border border-gray-300 p-2.5 rounded-md text-gray-600 cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Masuk (Qty)</label>
+                            <input type="number" id="inJumlah" min="1" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none">
+                        </div>
+                        <button type="submit" class="w-full bg-green-600 text-white font-medium py-2.5 rounded-md hover:bg-green-700 transition shadow-sm">Simpan Stok Masuk</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- 3. BARANG KELUAR -->
+            <section id="barangKeluar" class="tab-content">
+                <div class="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto border-t-4 border-red-500">
+                    <h3 class="text-2xl font-bold text-navy-800 mb-6 border-b pb-2">Input Barang Keluar</h3>
+                    <form id="formKeluar" onsubmit="submitKeluar(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Keluar</label>
+                            <input type="date" id="outTanggal" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Kode Barang</label>
+                            <select id="outKode" onchange="autoFillNama('outKode', 'outNama')" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none bg-white">
+                                <option value="">-- Pilih Kode --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Barang (Otomatis)</label>
+                            <input type="text" id="outNama" readonly class="w-full bg-gray-100 border border-gray-300 p-2.5 rounded-md text-gray-600 cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Keluar (Qty)</label>
+                            <input type="number" id="outJumlah" min="1" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none">
+                        </div>
+                        <p class="text-xs text-gray-500">* Total Pendapatan akan dihitung otomatis di sistem berdasarkan Harga Jual x Jumlah Keluar.</p>
+                        <button type="submit" class="w-full bg-red-600 text-white font-medium py-2.5 rounded-md hover:bg-red-700 transition shadow-sm">Catat Barang Keluar</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- 4. DAFTAR BARANG (MASTER DATA) -->
+            <section id="daftarBarang" class="tab-content">
+                
+                <!-- Form Tambah Barang -->
+                <div class="bg-white p-6 rounded-lg shadow-sm mb-6 border-t-4 border-navy-700">
+                    <h3 class="text-lg font-bold text-navy-800 mb-4">➕ Tambah Barang Baru</h3>
+                    <form id="formBarang" onsubmit="submitBarang(event)" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div class="md:col-span-1">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Kode Barang</label>
+                            <input type="text" id="brgKode" required placeholder="Cth: BRG-01" class="w-full border border-gray-300 p-2 rounded focus:ring-1 focus:ring-navy-500 outline-none text-sm">
+                        </div>
+                        <div class="md:col-span-1">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Nama Barang</label>
+                            <input type="text" id="brgNama" required placeholder="Nama lengkap" class="w-full border border-gray-300 p-2 rounded focus:ring-1 focus:ring-navy-500 outline-none text-sm">
+                        </div>
+                        <div class="md:col-span-1">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">HPP (Modal)</label>
+                            <input type="number" id="brgHPP" required placeholder="Rp" class="w-full border border-gray-300 p-2 rounded focus:ring-1 focus:ring-navy-500 outline-none text-sm">
+                        </div>
+                        <div class="md:col-span-1">
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Harga Jual</label>
+                            <input type="number" id="brgHarga" required placeholder="Rp" class="w-full border border-gray-300 p-2 rounded focus:ring-1 focus:ring-navy-500 outline-none text-sm">
+                        </div>
+                        <div class="md:col-span-1 flex items-end">
+                            <button type="submit" class="w-full bg-navy-700 text-white font-medium py-2 rounded hover:bg-navy-800 transition text-sm">Simpan</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tabel Daftar Barang -->
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+                        <h3 class="text-lg font-bold text-navy-800">Daftar Semua Barang</h3>
+                        <button onclick="fetchItems()" class="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-navy-800 text-white">
+                                <tr>
+                                    <th class="p-3">Kode Barang</th>
+                                    <th class="p-3">Nama Barang</th>
+                                    <th class="p-3">HPP (Rp)</th>
+                                    <th class="p-3">Harga Jual (Rp)</th>
+                                    <th class="p-3">Stok Saat Ini</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemsTbody" class="divide-y divide-gray-200">
+                                <tr><td colspan="5" class="p-4 text-center text-gray-500">Memuat data dari database...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5. TOTAL PENDAPATAN -->
+            <section id="pendapatan" class="tab-content">
+                <div class="bg-gradient-to-r from-navy-800 to-blue-600 p-8 rounded-lg shadow-lg text-white mb-8 text-center">
+                    <h3 class="text-xl font-medium text-blue-100 mb-2">Total Pendapatan Keseluruhan</h3>
+                    <div class="text-5xl font-bold tracking-tight mb-2" id="grandTotalText">Rp 0</div>
+                    <p class="text-sm text-blue-200">Dihitung otomatis dari: Qty Keluar × Harga Jual</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden border">
+                    <div class="p-4 border-b flex justify-between items-center bg-gray-50">
+                        <h3 class="text-lg font-bold text-navy-800">Riwayat Penjualan & Pendapatan</h3>
+                        <button onclick="loadRevenue()" class="text-sm text-blue-600 hover:text-blue-800">🔄 Refresh Laporan</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-gray-100 text-gray-700">
+                                <tr>
+                                    <th class="p-3">Tanggal</th>
+                                    <th class="p-3">Kode</th>
+                                    <th class="p-3">Nama Barang</th>
+                                    <th class="p-3 text-center">Qty Keluar</th>
+                                    <th class="p-3 text-right">Harga Jual (Rp)</th>
+                                    <th class="p-3 text-right text-navy-800 font-bold">Total (Rp)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="revenueTbody" class="divide-y divide-gray-200">
+                                <tr><td colspan="6" class="p-4 text-center text-gray-500">Memuat laporan...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // ==========================================
+        // KONFIGURASI PENTING (ISI SETELAH DEPLOY)
+        // ==========================================
+        // Ganti URL ini dengan URL Web App Google Apps Script Anda!!
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4WVqH_zFQDosYE-wUMWWzEofmAQwnEhC8Bpkm8gWBZMPxL-dDisQv9DtO_YN4_tlA/exec"; 
+        
+        // State Global
+        let cachedItems = [];
+
+        // ==========================================
+        // UI FUNCTIONS (TABS & TOAST)
+        // ==========================================
+        function switchTab(tabId, btnElement) {
+            // Sembunyikan semua tab
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+
+            // Hapus style aktif dari semua tombol menu
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('btn-active'));
+            btnElement.classList.add('btn-active');
+
+            // Set default date ke hari ini untuk form
+            const today = new Date().toISOString().split('T')[0];
+            if(tabId === 'stokMasuk') document.getElementById('inTanggal').value = today;
+            if(tabId === 'barangKeluar') document.getElementById('outTanggal').value = today;
+
+            // Trigger Load Data
+            if(tabId === 'dashboard') loadDashboard();
+            if(tabId === 'pendapatan') loadRevenue();
+        }
+
+        function showLoading(show) {
+            const el = document.getElementById('loading');
+            show ? el.classList.remove('hidden') : el.classList.add('hidden');
+        }
+
+        function showToast(message, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `fixed top-5 right-5 z-50 p-4 rounded-lg shadow-lg text-white font-medium transform transition-all duration-300 ${isSuccess ? 'bg-green-600' : 'bg-red-600'}`;
+            
+            // Hapus kelas hide
+            toast.classList.remove('translate-x-full', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+            }, 3000);
+        }
+
+        function formatRupiah(angka) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka || 0);
+        }
+
+        // ==========================================
+        // API FETCH FUNCTIONS
+        // ==========================================
+        
+        // 1. Ambil Data Daftar Barang
+        async function fetchItems() {
+            if(SCRIPT_URL === "GANTI_URL_APPS_SCRIPT_DISINI") {
+                showToast("URL Web App belum diatur!", false);
+                return;
+            }
+            
+            showLoading(true);
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getItems`);
+                const items = await response.json();
+                cachedItems = items;
+                
+                // Update Tabel
+                const tbody = document.getElementById('itemsTbody');
+                tbody.innerHTML = '';
+                
+                // Update Dropdown Form
+                const selectIn = document.getElementById('inKode');
+                const selectOut = document.getElementById('outKode');
+                selectIn.innerHTML = '<option value="">-- Pilih Kode --</option>';
+                selectOut.innerHTML = '<option value="">-- Pilih Kode --</option>';
+
+                if(items.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">Belum ada barang terdaftar.</td></tr>`;
+                } else {
+                    items.forEach(item => {
+                        // Table row
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-3 font-medium text-navy-700">${item.kode}</td>
+                                <td class="p-3">${item.nama}</td>
+                                <td class="p-3">${formatRupiah(item.hpp)}</td>
+                                <td class="p-3">${formatRupiah(item.harga)}</td>
+                                <td class="p-3 font-bold ${item.stok <= 5 ? 'text-red-500' : 'text-green-600'}">${item.stok}</td>
+                            </tr>
+                        `;
+                        // Dropdown options
+                        selectIn.innerHTML += `<option value="${item.kode}">${item.kode} - ${item.nama}</option>`;
+                        selectOut.innerHTML += `<option value="${item.kode}">${item.kode} - ${item.nama}</option>`;
+                    });
+                }
+            } catch (error) {
+                showToast('Gagal memuat data!', false);
+                console.error(error);
+            }
+            showLoading(false);
+        }
+
+        // 2. Load Dashboard
+        async function loadDashboard() {
+            showLoading(true);
+            const start = document.getElementById('dashStart').value;
+            const end = document.getElementById('dashEnd').value;
+            
+            let url = `${SCRIPT_URL}?action=getDashboard`;
+            if(start) url += `&startDate=${start}`;
+            if(end) url += `&endDate=${end}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                document.getElementById('dashTotalMasuk').innerText = data.totalMasuk;
+                document.getElementById('dashTotalKeluar').innerText = data.totalKeluar;
+
+                const tbody = document.getElementById('topItemsTbody');
+                tbody.innerHTML = '';
+                if(data.topItems.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-gray-500">Tidak ada transaksi keluar di rentang tanggal ini.</td></tr>';
+                } else {
+                    data.topItems.forEach((item, index) => {
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-3 text-center font-bold text-gray-500">#${index + 1}</td>
+                                <td class="p-3 text-navy-700 font-medium">${item.kode}</td>
+                                <td class="p-3">${item.nama}</td>
+                                <td class="p-3 font-bold text-red-600">${item.qty} Unit</td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (error) {
+                showToast('Gagal memuat Dashboard', false);
+            }
+            showLoading(false);
+        }
+
+        // 3. Load Pendapatan
+        async function loadRevenue() {
+            showLoading(true);
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getRevenue`);
+                const data = await response.json();
+                
+                document.getElementById('grandTotalText').innerText = formatRupiah(data.totalRevenue);
+                
+                const tbody = document.getElementById('revenueTbody');
+                tbody.innerHTML = '';
+                if(data.list.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Belum ada transaksi pendapatan.</td></tr>';
+                } else {
+                    // Sort descending (terbaru diatas)
+                    data.list.reverse().forEach(row => {
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-gray-50">
+                                <td class="p-3 text-gray-600">${row.tanggal}</td>
+                                <td class="p-3 font-medium">${row.kode}</td>
+                                <td class="p-3">${row.nama}</td>
+                                <td class="p-3 text-center font-bold text-red-600">${row.jumlah}</td>
+                                <td class="p-3 text-right text-gray-600">${formatRupiah(row.harga)}</td>
+                                <td class="p-3 text-right font-bold text-navy-800">${formatRupiah(row.total)}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (error) {
+                showToast('Gagal memuat Pendapatan', false);
+            }
+            showLoading(false);
+        }
+
+        // ==========================================
+        // SUBMIT FORM FUNCTIONS (POST)
+        // ==========================================
+
+        async function postData(payload) {
+            showLoading(true);
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                showLoading(false);
+                
+                if(result.status === 'success') {
+                    showToast(result.message, true);
+                    return true;
+                } else {
+                    showToast(result.message || 'Terjadi kesalahan!', false);
+                    return false;
+                }
+            } catch (error) {
+                showLoading(false);
+                showToast('Koneksi Gagal!', false);
+                return false;
+            }
+        }
+
+        async function submitBarang(e) {
+            e.preventDefault();
+            const payload = {
+                action: 'addItem',
+                kode: document.getElementById('brgKode').value,
+                nama: document.getElementById('brgNama').value,
+                hpp: document.getElementById('brgHPP').value,
+                harga: document.getElementById('brgHarga').value
+            };
+            const success = await postData(payload);
+            if(success) {
+                document.getElementById('formBarang').reset();
+                fetchItems(); // Refresh data
+            }
+        }
+
+        async function submitMasuk(e) {
+            e.preventDefault();
+            const payload = {
+                action: 'addMasuk',
+                tanggal: document.getElementById('inTanggal').value,
+                kode: document.getElementById('inKode').value,
+                nama: document.getElementById('inNama').value,
+                jumlah: document.getElementById('inJumlah').value
+            };
+            const success = await postData(payload);
+            if(success) {
+                document.getElementById('inJumlah').value = '';
+                fetchItems(); // Update stok
+            }
+        }
+
+        async function submitKeluar(e) {
+            e.preventDefault();
+            const payload = {
+                action: 'addKeluar',
+                tanggal: document.getElementById('outTanggal').value,
+                kode: document.getElementById('outKode').value,
+                nama: document.getElementById('outNama').value,
+                jumlah: document.getElementById('outJumlah').value
+            };
+            const success = await postData(payload);
+            if(success) {
+                document.getElementById('outJumlah').value = '';
+                fetchItems(); // Update stok
+            }
+        }
+
+        // Auto isi nama barang
+        function autoFillNama(selectId, inputId) {
+            const kode = document.getElementById(selectId).value;
+            const item = cachedItems.find(i => i.kode === kode);
+            document.getElementById(inputId).value = item ? item.nama : '';
+        }
+
+        // Init App On Load
+        window.onload = () => {
+            fetchItems();
+            loadDashboard();
+            
+            // Set first day of month and today for dashboard default filters
+            const date = new Date();
+            const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split('T')[0];
+            const today = date.toISOString().split('T')[0];
+            document.getElementById('dashStart').value = firstDay;
+            document.getElementById('dashEnd').value = today;
+        };
+
+    </script>
+</body>
+</html>
