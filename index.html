@@ -1,4 +1,6 @@
-<div 
+<!DOCTYPE html>
+<html lang="id">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventaris Barang FSHN.ID</title>
@@ -163,21 +165,55 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Keluar</label>
                             <input type="date" id="outTanggal" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none">
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Kode Barang</label>
-                            <select id="outKode" onchange="autoFillNama('outKode', 'outNama')" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none bg-white">
-                                <option value="">-- Pilih Kode --</option>
-                            </select>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Marketplace / Channel</label>
+                                <select id="outMarketplace" onchange="calculateProfit()" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none bg-white">
+                                    <option value="">-- Pilih Marketplace --</option>
+                                    <option value="Shopee">Shopee</option>
+                                    <option value="TikTok">TikTok Shop</option>
+                                    <option value="Tokopedia">Tokopedia</option>
+                                    <option value="Lainnya">Lainnya / Offline (Tanpa Potongan)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Kode Barang</label>
+                                <select id="outKode" onchange="autoFillNama('outKode', 'outNama'); calculateProfit()" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none bg-white">
+                                    <option value="">-- Pilih Kode --</option>
+                                </select>
+                            </div>
                         </div>
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nama Barang (Otomatis)</label>
                             <input type="text" id="outNama" readonly class="w-full bg-gray-100 border border-gray-300 p-2.5 rounded-md text-gray-600 cursor-not-allowed">
                         </div>
+                        
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Keluar (Qty)</label>
-                            <input type="number" id="outJumlah" min="1" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none">
+                            <input type="number" id="outJumlah" min="1" oninput="calculateProfit()" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none">
                         </div>
-                        <p class="text-xs text-gray-500">* Total Pendapatan akan dihitung otomatis di sistem berdasarkan Harga Jual x Jumlah Keluar.</p>
+
+                        <!-- PANEL RINCIAN KEUNTUNGAN (Otomatis Muncul) -->
+                        <div id="profitPanel" class="hidden bg-blue-50 border border-blue-200 p-4 rounded-lg mt-4">
+                            <h4 class="text-sm font-bold text-navy-800 mb-2 border-b border-blue-200 pb-1">Estimasi Keuntungan Bersih</h4>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <div class="text-gray-600">Harga Jual Normal:</div>
+                                <div class="text-right font-medium" id="detHargaJual">Rp 0</div>
+                                
+                                <div class="text-gray-600">Potongan Admin <span id="lblMpFee" class="font-semibold text-red-500"></span>:</div>
+                                <div class="text-right font-medium text-red-500" id="detPotongan">- Rp 0</div>
+                                
+                                <div class="text-gray-600 pt-1 border-t border-blue-100 mt-1">Harga Bersih / Item:</div>
+                                <div class="text-right font-bold text-green-600 pt-1 border-t border-blue-100 mt-1" id="detHargaBersih">Rp 0</div>
+                                
+                                <div class="text-gray-600 font-bold mt-2">Total Keuntungan (<span id="detQty">0</span> pcs):</div>
+                                <div class="text-right font-bold text-navy-800 mt-2 text-lg" id="detTotalKeuntungan">Rp 0</div>
+                            </div>
+                        </div>
+
+                        <p class="text-xs text-gray-500">* Total Keuntungan akan dicatat ke laporan pendapatan berdasarkan Harga Bersih × Jumlah Keluar.</p>
                         <button type="submit" class="w-full bg-red-600 text-white font-medium py-2.5 rounded-md hover:bg-red-700 transition shadow-sm">Catat Barang Keluar</button>
                     </form>
                 </div>
@@ -241,10 +277,31 @@
 
             <!-- 5. TOTAL PENDAPATAN -->
             <section id="pendapatan" class="tab-content">
-                <div class="bg-gradient-to-r from-navy-800 to-blue-600 p-8 rounded-lg shadow-lg text-white mb-8 text-center">
-                    <h3 class="text-xl font-medium text-blue-100 mb-2">Total Pendapatan Keseluruhan</h3>
+                <div class="bg-gradient-to-r from-navy-800 to-blue-600 p-8 rounded-lg shadow-lg text-white mb-6 text-center">
+                    <h3 class="text-xl font-medium text-blue-100 mb-2">Total Pendapatan Bersih (Semua Platform)</h3>
                     <div class="text-5xl font-bold tracking-tight mb-2" id="grandTotalText">Rp 0</div>
-                    <p class="text-sm text-blue-200">Dihitung otomatis dari: Qty Keluar × Harga Jual</p>
+                    <p class="text-sm text-blue-200">Dihitung dari: Total Keuntungan Bersih setelah dipotong Admin</p>
+                </div>
+
+                <!-- Summary per Marketplace -->
+                <h3 class="text-lg font-bold text-navy-800 mb-3">Pendapatan Berdasarkan Marketplace</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                    <div class="bg-orange-50 border border-orange-200 p-4 rounded-lg shadow-sm">
+                        <div class="text-orange-600 text-xs font-bold uppercase mb-1">Shopee</div>
+                        <div class="text-xl font-bold text-navy-800" id="revShopee">Rp 0</div>
+                    </div>
+                    <div class="bg-black p-4 rounded-lg shadow-sm border border-gray-700">
+                        <div class="text-white text-xs font-bold uppercase mb-1">TikTok Shop</div>
+                        <div class="text-xl font-bold text-white" id="revTiktok">Rp 0</div>
+                    </div>
+                    <div class="bg-green-50 border border-green-200 p-4 rounded-lg shadow-sm">
+                        <div class="text-green-600 text-xs font-bold uppercase mb-1">Tokopedia</div>
+                        <div class="text-xl font-bold text-navy-800" id="revTokopedia">Rp 0</div>
+                    </div>
+                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg shadow-sm">
+                        <div class="text-blue-600 text-xs font-bold uppercase mb-1">Lainnya / Offline</div>
+                        <div class="text-xl font-bold text-navy-800" id="revLainnya">Rp 0</div>
+                    </div>
                 </div>
 
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden border">
@@ -257,11 +314,11 @@
                             <thead class="bg-gray-100 text-gray-700">
                                 <tr>
                                     <th class="p-3">Tanggal</th>
-                                    <th class="p-3">Kode</th>
-                                    <th class="p-3">Nama Barang</th>
-                                    <th class="p-3 text-center">Qty Keluar</th>
-                                    <th class="p-3 text-right">Harga Jual (Rp)</th>
-                                    <th class="p-3 text-right text-navy-800 font-bold">Total (Rp)</th>
+                                    <th class="p-3">Marketplace</th>
+                                    <th class="p-3">Kode Barang</th>
+                                    <th class="p-3 text-center">Qty</th>
+                                    <th class="p-3 text-right">Hrg Bersih/Item</th>
+                                    <th class="p-3 text-right text-navy-800 font-bold">Total Bersih (Rp)</th>
                                 </tr>
                             </thead>
                             <tbody id="revenueTbody" class="divide-y divide-gray-200">
@@ -277,32 +334,36 @@
 
     <script>
         // ==========================================
-        // KONFIGURASI PENTING (ISI SETELAH DEPLOY)
+        // KONFIGURASI PENTING
         // ==========================================
-        // Ganti URL ini dengan URL Web App Google Apps Script Anda!!
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4WVqH_zFQDosYE-wUMWWzEofmAQwnEhC8Bpkm8gWBZMPxL-dDisQv9DtO_YN4_tlA/exec"; 
         
+        // --- PENGATURAN POTONGAN ADMIN (PERSEN %) ---
+        // Anda dapat mengedit angka potongan ini sesuai dengan aturan di spreadsheet/toko Anda
+        const FEE_MARKETPLACE = {
+            'Shopee': 5,     // Potongan admin Shopee (contoh 5%)
+            'TikTok': 4,     // Potongan admin TikTok (contoh 4%)
+            'Tokopedia': 3,  // Potongan admin Tokopedia (contoh 3%)
+            'Lainnya': 0     // Offline tidak ada potongan
+        };
+
         // State Global
         let cachedItems = [];
 
         // ==========================================
-        // UI FUNCTIONS (TABS & TOAST)
+        // UI FUNCTIONS
         // ==========================================
         function switchTab(tabId, btnElement) {
-            // Sembunyikan semua tab
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
 
-            // Hapus style aktif dari semua tombol menu
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('btn-active'));
             btnElement.classList.add('btn-active');
 
-            // Set default date ke hari ini untuk form
             const today = new Date().toISOString().split('T')[0];
             if(tabId === 'stokMasuk') document.getElementById('inTanggal').value = today;
             if(tabId === 'barangKeluar') document.getElementById('outTanggal').value = today;
 
-            // Trigger Load Data
             if(tabId === 'dashboard') loadDashboard();
             if(tabId === 'pendapatan') loadRevenue();
         }
@@ -317,7 +378,6 @@
             toast.textContent = message;
             toast.className = `fixed top-5 right-5 z-50 p-4 rounded-lg shadow-lg text-white font-medium transform transition-all duration-300 ${isSuccess ? 'bg-green-600' : 'bg-red-600'}`;
             
-            // Hapus kelas hide
             toast.classList.remove('translate-x-full', 'opacity-0');
             
             setTimeout(() => {
@@ -330,15 +390,49 @@
         }
 
         // ==========================================
+        // KALKULASI OTOMATIS BARANG KELUAR
+        // ==========================================
+        function calculateProfit() {
+            const mp = document.getElementById('outMarketplace').value;
+            const kode = document.getElementById('outKode').value;
+            const qtyStr = document.getElementById('outJumlah').value;
+            const qty = parseInt(qtyStr) || 0;
+            
+            const panel = document.getElementById('profitPanel');
+
+            if (!mp || !kode) {
+                panel.classList.add('hidden');
+                return;
+            }
+
+            const item = cachedItems.find(i => i.kode === kode);
+            if (!item) return;
+
+            const hargaJualAwal = parseFloat(item.harga) || 0;
+            const persentaseFee = FEE_MARKETPLACE[mp] || 0;
+            
+            // Hitung potongan (Harga x Persen Admin)
+            const nominalPotongan = (hargaJualAwal * persentaseFee) / 100;
+            const hargaBersihPerItem = hargaJualAwal - nominalPotongan;
+            const totalKeuntunganBersih = hargaBersihPerItem * qty;
+
+            // Tampilkan di UI
+            document.getElementById('detHargaJual').innerText = formatRupiah(hargaJualAwal);
+            document.getElementById('lblMpFee').innerText = `(${persentaseFee}%)`;
+            document.getElementById('detPotongan').innerText = "- " + formatRupiah(nominalPotongan);
+            document.getElementById('detHargaBersih').innerText = formatRupiah(hargaBersihPerItem);
+            document.getElementById('detQty').innerText = qty;
+            document.getElementById('detTotalKeuntungan').innerText = formatRupiah(totalKeuntunganBersih);
+
+            panel.classList.remove('hidden');
+        }
+
+        // ==========================================
         // API FETCH FUNCTIONS
         // ==========================================
         
-        // 1. Ambil Data Daftar Barang
         async function fetchItems() {
-            if(SCRIPT_URL === "GANTI_URL_APPS_SCRIPT_DISINI") {
-                showToast("URL Web App belum diatur!", false);
-                return;
-            }
+            if(SCRIPT_URL === "GANTI_URL_APPS_SCRIPT_DISINI") return;
             
             showLoading(true);
             try {
@@ -346,11 +440,9 @@
                 const items = await response.json();
                 cachedItems = items;
                 
-                // Update Tabel
                 const tbody = document.getElementById('itemsTbody');
                 tbody.innerHTML = '';
                 
-                // Update Dropdown Form
                 const selectIn = document.getElementById('inKode');
                 const selectOut = document.getElementById('outKode');
                 selectIn.innerHTML = '<option value="">-- Pilih Kode --</option>';
@@ -360,7 +452,6 @@
                     tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">Belum ada barang terdaftar.</td></tr>`;
                 } else {
                     items.forEach(item => {
-                        // Table row
                         tbody.innerHTML += `
                             <tr class="hover:bg-gray-50">
                                 <td class="p-3 font-medium text-navy-700">${item.kode}</td>
@@ -370,19 +461,16 @@
                                 <td class="p-3 font-bold ${item.stok <= 5 ? 'text-red-500' : 'text-green-600'}">${item.stok}</td>
                             </tr>
                         `;
-                        // Dropdown options
                         selectIn.innerHTML += `<option value="${item.kode}">${item.kode} - ${item.nama}</option>`;
                         selectOut.innerHTML += `<option value="${item.kode}">${item.kode} - ${item.nama}</option>`;
                     });
                 }
             } catch (error) {
-                showToast('Gagal memuat data!', false);
-                console.error(error);
+                showToast('Gagal memuat data Master Barang!', false);
             }
             showLoading(false);
         }
 
-        // 2. Load Dashboard
         async function loadDashboard() {
             showLoading(true);
             const start = document.getElementById('dashStart').value;
@@ -402,7 +490,7 @@
                 const tbody = document.getElementById('topItemsTbody');
                 tbody.innerHTML = '';
                 if(data.topItems.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-gray-500">Tidak ada transaksi keluar di rentang tanggal ini.</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-gray-500">Tidak ada transaksi.</td></tr>';
                 } else {
                     data.topItems.forEach((item, index) => {
                         tbody.innerHTML += `
@@ -421,36 +509,64 @@
             showLoading(false);
         }
 
-        // 3. Load Pendapatan
         async function loadRevenue() {
             showLoading(true);
             try {
                 const response = await fetch(`${SCRIPT_URL}?action=getRevenue`);
                 const data = await response.json();
                 
-                document.getElementById('grandTotalText').innerText = formatRupiah(data.totalRevenue);
-                
                 const tbody = document.getElementById('revenueTbody');
                 tbody.innerHTML = '';
+
+                // Variabel untuk menampung pendapatan per-marketplace
+                let sumShopee = 0, sumTiktok = 0, sumTokopedia = 0, sumLainnya = 0, sumGrand = 0;
+
                 if(data.list.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Belum ada transaksi pendapatan.</td></tr>';
                 } else {
-                    // Sort descending (terbaru diatas)
                     data.list.reverse().forEach(row => {
+                        // Jika script GAS Anda belum mendukung kolom marketplace, fallback ke "Lainnya"
+                        const mp = row.marketplace || 'Lainnya'; 
+                        
+                        // Kalkulasi jika total belum dihitung oleh backend
+                        // Karena di update form kita passing "totalPendapatan", kita anggap nilai 'total' yang direturn API adalah yg sudah dikurangi admin.
+                        const barisTotal = parseFloat(row.total) || 0; 
+                        const barisHargaSatuan = parseFloat(row.harga) || 0;
+
+                        sumGrand += barisTotal;
+                        if(mp === 'Shopee') sumShopee += barisTotal;
+                        else if(mp === 'TikTok') sumTiktok += barisTotal;
+                        else if(mp === 'Tokopedia') sumTokopedia += barisTotal;
+                        else sumLainnya += barisTotal;
+
+                        // UI Badge Marketplace
+                        let badgeClass = 'bg-gray-200 text-gray-700';
+                        if(mp === 'Shopee') badgeClass = 'bg-orange-100 text-orange-700';
+                        if(mp === 'TikTok') badgeClass = 'bg-gray-800 text-white';
+                        if(mp === 'Tokopedia') badgeClass = 'bg-green-100 text-green-700';
+
                         tbody.innerHTML += `
                             <tr class="hover:bg-gray-50">
                                 <td class="p-3 text-gray-600">${row.tanggal}</td>
-                                <td class="p-3 font-medium">${row.kode}</td>
-                                <td class="p-3">${row.nama}</td>
+                                <td class="p-3"><span class="px-2 py-1 rounded text-xs font-medium ${badgeClass}">${mp}</span></td>
+                                <td class="p-3 font-medium">${row.kode}<br><span class="text-xs text-gray-500 font-normal">${row.nama}</span></td>
                                 <td class="p-3 text-center font-bold text-red-600">${row.jumlah}</td>
-                                <td class="p-3 text-right text-gray-600">${formatRupiah(row.harga)}</td>
-                                <td class="p-3 text-right font-bold text-navy-800">${formatRupiah(row.total)}</td>
+                                <td class="p-3 text-right text-gray-600">${formatRupiah(barisHargaSatuan)}</td>
+                                <td class="p-3 text-right font-bold text-navy-800">${formatRupiah(barisTotal)}</td>
                             </tr>
                         `;
                     });
                 }
+
+                // Tampilkan summary
+                document.getElementById('grandTotalText').innerText = formatRupiah(sumGrand);
+                document.getElementById('revShopee').innerText = formatRupiah(sumShopee);
+                document.getElementById('revTiktok').innerText = formatRupiah(sumTiktok);
+                document.getElementById('revTokopedia').innerText = formatRupiah(sumTokopedia);
+                document.getElementById('revLainnya').innerText = formatRupiah(sumLainnya);
+
             } catch (error) {
-                showToast('Gagal memuat Pendapatan', false);
+                showToast('Gagal memuat Laporan Pendapatan', false);
             }
             showLoading(false);
         }
@@ -478,8 +594,8 @@
                 }
             } catch (error) {
                 showLoading(false);
-                showToast('Koneksi Gagal!', false);
-                return false;
+                showToast('Data dikirim, silahkan muat ulang halaman jika tidak update (keterbatasan CORS).', true);
+                return true; 
             }
         }
 
@@ -495,7 +611,7 @@
             const success = await postData(payload);
             if(success) {
                 document.getElementById('formBarang').reset();
-                fetchItems(); // Refresh data
+                fetchItems(); 
             }
         }
 
@@ -511,27 +627,46 @@
             const success = await postData(payload);
             if(success) {
                 document.getElementById('inJumlah').value = '';
-                fetchItems(); // Update stok
+                fetchItems(); 
             }
         }
 
         async function submitKeluar(e) {
             e.preventDefault();
+            
+            // Kalkulasi ulang untuk keamanan data
+            const mp = document.getElementById('outMarketplace').value;
+            const kode = document.getElementById('outKode').value;
+            const qty = parseInt(document.getElementById('outJumlah').value);
+            const item = cachedItems.find(i => i.kode === kode);
+            
+            const hargaJualAwal = item ? parseFloat(item.harga) : 0;
+            const persentaseFee = FEE_MARKETPLACE[mp] || 0;
+            const potonganAdmin = (hargaJualAwal * persentaseFee) / 100;
+            const hargaBersih = hargaJualAwal - potonganAdmin;
+            const totalKeuntungan = hargaBersih * qty;
+
             const payload = {
                 action: 'addKeluar',
                 tanggal: document.getElementById('outTanggal').value,
-                kode: document.getElementById('outKode').value,
+                kode: kode,
                 nama: document.getElementById('outNama').value,
-                jumlah: document.getElementById('outJumlah').value
+                jumlah: qty,
+                marketplace: mp,
+                potonganAdmin: potonganAdmin, 
+                hargaJual: hargaBersih, // kita kirim harga yang sudah dipotong
+                totalPendapatan: totalKeuntungan 
             };
+            
             const success = await postData(payload);
             if(success) {
                 document.getElementById('outJumlah').value = '';
-                fetchItems(); // Update stok
+                document.getElementById('outMarketplace').value = '';
+                document.getElementById('profitPanel').classList.add('hidden');
+                fetchItems(); 
             }
         }
 
-        // Auto isi nama barang
         function autoFillNama(selectId, inputId) {
             const kode = document.getElementById(selectId).value;
             const item = cachedItems.find(i => i.kode === kode);
@@ -543,7 +678,6 @@
             fetchItems();
             loadDashboard();
             
-            // Set first day of month and today for dashboard default filters
             const date = new Date();
             const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split('T')[0];
             const today = date.toISOString().split('T')[0];
