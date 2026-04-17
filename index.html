@@ -159,7 +159,7 @@
 
             <!-- 2. STOK MASUK -->
             <section id="stokMasuk" class="tab-content">
-                <div class="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto">
+                <div class="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto border-t-4 border-green-500">
                     <h3 class="text-2xl font-bold text-navy-800 mb-6 border-b pb-2">Input Stok Masuk</h3>
                     <form id="formMasuk" onsubmit="submitMasuk(event)" class="space-y-4">
                         <div>
@@ -167,19 +167,23 @@
                             <input type="date" id="inTanggal" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Kode Barang</label>
-                            <select id="inKode" onchange="autoFillNama('inKode', 'inNama')" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none bg-white">
-                                <option value="">-- Pilih Kode --</option>
-                            </select>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Kode Barang (Pilih / Ketik Manual)</label>
+                            <!-- Menggunakan Input dengan Datalist untuk pencarian & input manual -->
+                            <input list="inKodeList" id="inKode" oninput="autoFillNamaDatalist('inKode', 'inNama')" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none bg-white" placeholder="Ketik atau cari kode..." autocomplete="off">
+                            <datalist id="inKodeList">
+                                <!-- Options diisi dari JS -->
+                            </datalist>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Barang (Otomatis)</label>
-                            <input type="text" id="inNama" readonly class="w-full bg-gray-100 border border-gray-300 p-2.5 rounded-md text-gray-600 cursor-not-allowed">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Barang</label>
+                            <!-- Input bisa diedit secara manual -->
+                            <input type="text" id="inNama" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none" placeholder="Otomatis terisi atau ketik manual...">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Masuk (Qty)</label>
                             <input type="number" id="inJumlah" min="1" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none">
                         </div>
+                        <p class="text-xs text-gray-500">* Jika barang belum terdaftar, Anda dapat langsung mengetik Kode dan Nama Barang baru di atas.</p>
                         <button type="submit" class="w-full bg-green-600 text-white font-medium py-2.5 rounded-md hover:bg-green-700 transition shadow-sm">Simpan Stok Masuk</button>
                     </form>
                 </div>
@@ -558,9 +562,12 @@
                     const tbody = document.getElementById('itemsTbody');
                     if(tbody) tbody.innerHTML = '';
                     
-                    const selectIn = document.getElementById('inKode');
+                    // Untuk Stok Masuk (Datalist / Manual)
+                    const datalistIn = document.getElementById('inKodeList');
+                    // Untuk Barang Keluar (Select / Dropdown)
                     const selectOut = document.getElementById('outKode');
-                    if(selectIn) selectIn.innerHTML = '<option value="">-- Pilih Kode --</option>';
+                    
+                    if(datalistIn) datalistIn.innerHTML = '';
                     if(selectOut) selectOut.innerHTML = '<option value="">-- Pilih Kode --</option>';
 
                     if(items.length === 0) {
@@ -576,7 +583,11 @@
                                     <td class="p-3 font-bold ${item.stok <= 5 ? 'text-red-500' : 'text-green-600'}">${item.stok}</td>
                                 </tr>
                             `;
-                            if(selectIn) selectIn.innerHTML += `<option value="${item.kode}">${item.kode} - ${item.nama}</option>`;
+                            
+                            // Tambahkan ke opsi Stok Masuk
+                            if(datalistIn) datalistIn.innerHTML += `<option value="${item.kode}">${item.nama}</option>`;
+                            
+                            // Tambahkan ke opsi Barang Keluar
                             if(selectOut) selectOut.innerHTML += `<option value="${item.kode}">${item.kode} - ${item.nama}</option>`;
                         });
                     }
@@ -786,6 +797,8 @@
             const success = await postData(payload);
             if(success) {
                 document.getElementById('inJumlah').value = '';
+                document.getElementById('inKode').value = '';
+                document.getElementById('inNama').value = '';
                 fetchItems(); 
             }
         }
@@ -820,16 +833,31 @@
             const success = await postData(payload);
             if(success) {
                 document.getElementById('outJumlah').value = '';
+                document.getElementById('outKode').value = '';
+                document.getElementById('outNama').value = '';
                 document.getElementById('outMarketplace').value = '';
                 document.getElementById('profitPanel').classList.add('hidden');
                 fetchItems(); 
             }
         }
 
+        // Fungsi Auto Fill Klasik (Hanya untuk Barang Keluar)
         function autoFillNama(selectId, inputId) {
             const kode = document.getElementById(selectId).value;
             const item = cachedItems.find(i => i.kode === kode);
             document.getElementById(inputId).value = item ? item.nama : '';
+        }
+
+        // Fungsi Auto Fill untuk Datalist (Stok Masuk)
+        function autoFillNamaDatalist(inputId, namaId) {
+            const kode = document.getElementById(inputId).value;
+            const item = cachedItems.find(i => i.kode === kode);
+            const namaInput = document.getElementById(namaId);
+            
+            // Jika kode ditemukan di database, isi namanya. Jika tidak biarkan user mengetik bebas.
+            if (item) {
+                namaInput.value = item.nama;
+            }
         }
 
         // ==========================================
