@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventaris Barang FSHN.ID</title>
+
+    <!-- ========================================== -->
+    <!-- MASUKAN URL GOOGLE APPS SCRIPT ANDA DISINI -->
+    <!-- ========================================== -->
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4WVqH_zFQDosYE-wUMWWzEofmAQwnEhC8Bpkm8gWBZMPxL-dDisQv9DtO_YN4_tlA/exec"; 
+    </script>
+
     <!-- Menggunakan Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Konfigurasi Tema Navy (Slate) -->
@@ -333,11 +341,6 @@
     </div>
 
     <script>
-        // ==========================================
-        // KONFIGURASI PENTING
-        // ==========================================
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4WVqH_zFQDosYE-wUMWWzEofmAQwnEhC8Bpkm8gWBZMPxL-dDisQv9DtO_YN4_tlA/exec"; 
-        
         // --- PENGATURAN POTONGAN ADMIN (PERSEN %) ---
         // Nilai default, akan diperbarui otomatis dari Google Spreadsheet
         let FEE_MARKETPLACE = {
@@ -432,55 +435,73 @@
         // ==========================================
         
         async function fetchFees() {
-            if(SCRIPT_URL === "GANTI_URL_APPS_SCRIPT_DISINI") return;
+            if(!SCRIPT_URL) return;
             try {
+                // Menghapus { redirect: 'follow' } eksplisit karena sering bentrok dengan iframe/blob sandbox
                 const response = await fetch(`${SCRIPT_URL}?action=getFees`);
-                const result = await response.json();
-                if(result && result.fees) {
-                    // Timpa variabel FEE_MARKETPLACE dengan data dari Spreadsheet
-                    FEE_MARKETPLACE = result.fees;
+                const textResponse = await response.text(); 
+                
+                try {
+                    const result = JSON.parse(textResponse);
+                    if(result && result.fees) {
+                        FEE_MARKETPLACE = result.fees;
+                    }
+                } catch (parseError) {
+                    console.warn('Peringatan: Google Script tidak mereturn JSON valid. Memakai fee default 0%. Pastikan Anda sudah Deploy ke "Versi Baru". Respons:', textResponse);
                 }
             } catch (error) {
-                console.error('Gagal memuat potongan fee dari database', error);
+                console.error('Gagal menghubungi database Google Script (getFees):', error);
             }
         }
 
         async function fetchItems() {
-            if(SCRIPT_URL === "GANTI_URL_APPS_SCRIPT_DISINI") return;
+            if(!SCRIPT_URL) return;
             
             showLoading(true);
             try {
                 const response = await fetch(`${SCRIPT_URL}?action=getItems`);
-                const items = await response.json();
-                cachedItems = items;
+                const textResponse = await response.text(); 
                 
-                const tbody = document.getElementById('itemsTbody');
-                tbody.innerHTML = '';
-                
-                const selectIn = document.getElementById('inKode');
-                const selectOut = document.getElementById('outKode');
-                selectIn.innerHTML = '<option value="">-- Pilih Kode --</option>';
-                selectOut.innerHTML = '<option value="">-- Pilih Kode --</option>';
+                try {
+                    const items = JSON.parse(textResponse);
+                    cachedItems = items;
+                    
+                    const tbody = document.getElementById('itemsTbody');
+                    tbody.innerHTML = '';
+                    
+                    const selectIn = document.getElementById('inKode');
+                    const selectOut = document.getElementById('outKode');
+                    selectIn.innerHTML = '<option value="">-- Pilih Kode --</option>';
+                    selectOut.innerHTML = '<option value="">-- Pilih Kode --</option>';
 
-                if(items.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">Belum ada barang terdaftar.</td></tr>`;
-                } else {
-                    items.forEach(item => {
-                        tbody.innerHTML += `
-                            <tr class="hover:bg-gray-50">
-                                <td class="p-3 font-medium text-navy-700">${item.kode}</td>
-                                <td class="p-3">${item.nama}</td>
-                                <td class="p-3">${formatRupiah(item.hpp)}</td>
-                                <td class="p-3">${formatRupiah(item.harga)}</td>
-                                <td class="p-3 font-bold ${item.stok <= 5 ? 'text-red-500' : 'text-green-600'}">${item.stok}</td>
-                            </tr>
-                        `;
-                        selectIn.innerHTML += `<option value="${item.kode}">${item.kode} - ${item.nama}</option>`;
-                        selectOut.innerHTML += `<option value="${item.kode}">${item.kode} - ${item.nama}</option>`;
-                    });
+                    if(items.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">Belum ada barang terdaftar.</td></tr>`;
+                    } else {
+                        items.forEach(item => {
+                            tbody.innerHTML += `
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-3 font-medium text-navy-700">${item.kode}</td>
+                                    <td class="p-3">${item.nama}</td>
+                                    <td class="p-3">${formatRupiah(item.hpp)}</td>
+                                    <td class="p-3">${formatRupiah(item.harga)}</td>
+                                    <td class="p-3 font-bold ${item.stok <= 5 ? 'text-red-500' : 'text-green-600'}">${item.stok}</td>
+                                </tr>
+                            `;
+                            selectIn.innerHTML += `<option value="${item.kode}">${item.kode} - ${item.nama}</option>`;
+                            selectOut.innerHTML += `<option value="${item.kode}">${item.kode} - ${item.nama}</option>`;
+                        });
+                    }
+                } catch (parseErr) {
+                    console.error("Error parse getItems. Respons dari server:", textResponse);
+                    showToast('Gagal membaca data Master Barang! Pastikan setelan akses "Siapa saja"', false);
                 }
             } catch (error) {
-                showToast('Gagal memuat data Master Barang!', false);
+                console.error("Error fetchItems:", error);
+                if (error.message.includes('Failed to fetch')) {
+                    showToast('Koneksi Ditolak! Pastikan Script dideploy ke "Siapa saja" (Anyone)', false);
+                } else {
+                    showToast('Gagal terhubung ke server', false);
+                }
             }
             showLoading(false);
         }
@@ -496,29 +517,41 @@
 
             try {
                 const response = await fetch(url);
-                const data = await response.json();
+                const textResponse = await response.text();
                 
-                document.getElementById('dashTotalMasuk').innerText = data.totalMasuk;
-                document.getElementById('dashTotalKeluar').innerText = data.totalKeluar;
+                try {
+                    const data = JSON.parse(textResponse);
+                    
+                    document.getElementById('dashTotalMasuk').innerText = data.totalMasuk;
+                    document.getElementById('dashTotalKeluar').innerText = data.totalKeluar;
 
-                const tbody = document.getElementById('topItemsTbody');
-                tbody.innerHTML = '';
-                if(data.topItems.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-gray-500">Tidak ada transaksi.</td></tr>';
-                } else {
-                    data.topItems.forEach((item, index) => {
-                        tbody.innerHTML += `
-                            <tr class="hover:bg-gray-50">
-                                <td class="p-3 text-center font-bold text-gray-500">#${index + 1}</td>
-                                <td class="p-3 text-navy-700 font-medium">${item.kode}</td>
-                                <td class="p-3">${item.nama}</td>
-                                <td class="p-3 font-bold text-red-600">${item.qty} Unit</td>
-                            </tr>
-                        `;
-                    });
+                    const tbody = document.getElementById('topItemsTbody');
+                    tbody.innerHTML = '';
+                    if(data.topItems.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-gray-500">Tidak ada transaksi.</td></tr>';
+                    } else {
+                        data.topItems.forEach((item, index) => {
+                            tbody.innerHTML += `
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-3 text-center font-bold text-gray-500">#${index + 1}</td>
+                                    <td class="p-3 text-navy-700 font-medium">${item.kode}</td>
+                                    <td class="p-3">${item.nama}</td>
+                                    <td class="p-3 font-bold text-red-600">${item.qty} Unit</td>
+                                </tr>
+                            `;
+                        });
+                    }
+                } catch (parseErr) {
+                    console.error("Error parse Dashboard. Respons server:", textResponse);
+                    showToast('Gagal membaca data Dashboard (Cek Konsol)', false);
                 }
             } catch (error) {
-                showToast('Gagal memuat Dashboard', false);
+                console.error("Error loadDashboard:", error);
+                if (error.message.includes('Failed to fetch')) {
+                    showToast('Koneksi Ditolak (CORS)! Cek setelan "Siapa saja" di Apps Script.', false);
+                } else {
+                    showToast('Gagal terhubung ke Dashboard.', false);
+                }
             }
             showLoading(false);
         }
@@ -527,60 +560,63 @@
             showLoading(true);
             try {
                 const response = await fetch(`${SCRIPT_URL}?action=getRevenue`);
-                const data = await response.json();
+                const textResponse = await response.text();
                 
-                const tbody = document.getElementById('revenueTbody');
-                tbody.innerHTML = '';
+                try {
+                    const data = JSON.parse(textResponse);
+                    
+                    const tbody = document.getElementById('revenueTbody');
+                    tbody.innerHTML = '';
 
-                // Variabel untuk menampung pendapatan per-marketplace
-                let sumShopee = 0, sumTiktok = 0, sumTokopedia = 0, sumLainnya = 0, sumGrand = 0;
+                    // Variabel untuk menampung pendapatan per-marketplace
+                    let sumShopee = 0, sumTiktok = 0, sumTokopedia = 0, sumLainnya = 0, sumGrand = 0;
 
-                if(data.list.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Belum ada transaksi pendapatan.</td></tr>';
-                } else {
-                    data.list.reverse().forEach(row => {
-                        // Jika script GAS Anda belum mendukung kolom marketplace, fallback ke "Lainnya"
-                        const mp = row.marketplace || 'Lainnya'; 
-                        
-                        // Kalkulasi jika total belum dihitung oleh backend
-                        // Karena di update form kita passing "totalPendapatan", kita anggap nilai 'total' yang direturn API adalah yg sudah dikurangi admin.
-                        const barisTotal = parseFloat(row.total) || 0; 
-                        const barisHargaSatuan = parseFloat(row.harga) || 0;
+                    if(data.list.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Belum ada transaksi pendapatan.</td></tr>';
+                    } else {
+                        data.list.reverse().forEach(row => {
+                            const mp = row.marketplace || 'Lainnya'; 
+                            
+                            const barisTotal = parseFloat(row.total) || 0; 
+                            const barisHargaSatuan = parseFloat(row.harga) || 0;
 
-                        sumGrand += barisTotal;
-                        if(mp === 'Shopee') sumShopee += barisTotal;
-                        else if(mp === 'TikTok') sumTiktok += barisTotal;
-                        else if(mp === 'Tokopedia') sumTokopedia += barisTotal;
-                        else sumLainnya += barisTotal;
+                            sumGrand += barisTotal;
+                            if(mp === 'Shopee') sumShopee += barisTotal;
+                            else if(mp === 'TikTok') sumTiktok += barisTotal;
+                            else if(mp === 'Tokopedia') sumTokopedia += barisTotal;
+                            else sumLainnya += barisTotal;
 
-                        // UI Badge Marketplace
-                        let badgeClass = 'bg-gray-200 text-gray-700';
-                        if(mp === 'Shopee') badgeClass = 'bg-orange-100 text-orange-700';
-                        if(mp === 'TikTok') badgeClass = 'bg-gray-800 text-white';
-                        if(mp === 'Tokopedia') badgeClass = 'bg-green-100 text-green-700';
+                            let badgeClass = 'bg-gray-200 text-gray-700';
+                            if(mp === 'Shopee') badgeClass = 'bg-orange-100 text-orange-700';
+                            if(mp === 'TikTok') badgeClass = 'bg-gray-800 text-white';
+                            if(mp === 'Tokopedia') badgeClass = 'bg-green-100 text-green-700';
 
-                        tbody.innerHTML += `
-                            <tr class="hover:bg-gray-50">
-                                <td class="p-3 text-gray-600">${row.tanggal}</td>
-                                <td class="p-3"><span class="px-2 py-1 rounded text-xs font-medium ${badgeClass}">${mp}</span></td>
-                                <td class="p-3 font-medium">${row.kode}<br><span class="text-xs text-gray-500 font-normal">${row.nama}</span></td>
-                                <td class="p-3 text-center font-bold text-red-600">${row.jumlah}</td>
-                                <td class="p-3 text-right text-gray-600">${formatRupiah(barisHargaSatuan)}</td>
-                                <td class="p-3 text-right font-bold text-navy-800">${formatRupiah(barisTotal)}</td>
-                            </tr>
-                        `;
-                    });
+                            tbody.innerHTML += `
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-3 text-gray-600">${row.tanggal}</td>
+                                    <td class="p-3"><span class="px-2 py-1 rounded text-xs font-medium ${badgeClass}">${mp}</span></td>
+                                    <td class="p-3 font-medium">${row.kode}<br><span class="text-xs text-gray-500 font-normal">${row.nama}</span></td>
+                                    <td class="p-3 text-center font-bold text-red-600">${row.jumlah}</td>
+                                    <td class="p-3 text-right text-gray-600">${formatRupiah(barisHargaSatuan)}</td>
+                                    <td class="p-3 text-right font-bold text-navy-800">${formatRupiah(barisTotal)}</td>
+                                </tr>
+                            `;
+                        });
+                    }
+
+                    document.getElementById('grandTotalText').innerText = formatRupiah(sumGrand);
+                    document.getElementById('revShopee').innerText = formatRupiah(sumShopee);
+                    document.getElementById('revTiktok').innerText = formatRupiah(sumTiktok);
+                    document.getElementById('revTokopedia').innerText = formatRupiah(sumTokopedia);
+                    document.getElementById('revLainnya').innerText = formatRupiah(sumLainnya);
+                } catch (parseErr) {
+                    console.error("Error parse Revenue. Respons server:", textResponse);
+                    showToast('Gagal membaca Laporan Pendapatan', false);
                 }
 
-                // Tampilkan summary
-                document.getElementById('grandTotalText').innerText = formatRupiah(sumGrand);
-                document.getElementById('revShopee').innerText = formatRupiah(sumShopee);
-                document.getElementById('revTiktok').innerText = formatRupiah(sumTiktok);
-                document.getElementById('revTokopedia').innerText = formatRupiah(sumTokopedia);
-                document.getElementById('revLainnya').innerText = formatRupiah(sumLainnya);
-
             } catch (error) {
-                showToast('Gagal memuat Laporan Pendapatan', false);
+                console.error("Error loadRevenue:", error);
+                showToast('Gagal terhubung ke Laporan', false);
             }
             showLoading(false);
         }
@@ -594,6 +630,9 @@
             try {
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8', 
+                    },
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
