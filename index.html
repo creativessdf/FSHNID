@@ -143,7 +143,7 @@
                 </div>
             </section>
 
-            <!-- 2. STOK MASUK (MULTI WARNA & FOTO) -->
+            <!-- 2. STOK MASUK (MULTI WARNA & FOTO OTOMATIS) -->
             <section id="stokMasuk" class="tab-content">
                 <div class="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto border-t-4 border-green-500">
                     <h3 class="text-2xl font-bold text-navy-800 mb-6 border-b pb-2">Input Stok Masuk</h3>
@@ -176,33 +176,10 @@
                             <h4 class="text-sm font-bold text-navy-800 mb-3 flex items-center justify-between">
                                 Daftar Varian (Warna & Foto)
                             </h4>
+                            <p class="text-xs text-gray-500 mb-3">* Kosongkan "Jumlah (Qty)" jika warna tersebut tidak ada stok masuk hari ini.</p>
                             
                             <div id="variantsContainer" class="space-y-3">
-                                <!-- Variant Row Pertama (Default) -->
-                                <div class="variant-row flex flex-col md:flex-row gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50 relative">
-                                    <div class="w-full md:w-5/12">
-                                        <label class="block text-xs font-medium text-gray-700 mb-1">Warna</label>
-                                        <input type="text" class="var-warna w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-navy-500 outline-none text-sm" required placeholder="Cth: Navy">
-                                    </div>
-                                    <div class="w-full md:w-3/12">
-                                        <label class="block text-xs font-medium text-gray-700 mb-1">Jumlah (Qty)</label>
-                                        <input type="number" min="1" class="var-jumlah w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-navy-500 outline-none text-sm" required placeholder="0">
-                                    </div>
-                                    <div class="w-full md:w-auto flex-1 flex items-end gap-3">
-                                        <div class="flex-1">
-                                            <label class="block text-xs font-medium text-gray-700 mb-1 text-center">Foto</label>
-                                            <label class="flex items-center justify-center w-full h-[42px] border-2 border-gray-300 border-dashed rounded cursor-pointer bg-white hover:bg-gray-100 overflow-hidden relative" title="Upload Foto">
-                                                <span class="text-gray-400 text-lg var-foto-icon">📷</span>
-                                                <img class="var-foto-preview absolute inset-0 w-full h-full object-cover hidden" />
-                                                <input type="file" class="hidden var-foto-input" accept="image/*" onchange="handleVariantImage(this)">
-                                                <input type="hidden" class="var-foto-base64">
-                                            </label>
-                                        </div>
-                                        <button type="button" onclick="removeVariantRow(this)" class="var-remove-btn text-red-500 hover:bg-red-100 p-2 rounded transition-colors" title="Hapus Warna" style="display:none;">
-                                            🗑️
-                                        </button>
-                                    </div>
-                                </div>
+                                <!-- Baris Varian akan dibuat secara otomatis lewat Javascript -->
                             </div>
                             
                             <button type="button" onclick="addVariantRow()" class="mt-3 text-sm text-blue-600 font-medium hover:text-blue-800 flex items-center justify-center w-full gap-1 bg-blue-50 border border-blue-100 p-2 rounded-md transition-colors border-dashed">
@@ -398,6 +375,7 @@
         let SCRIPT_URL = localStorage.getItem('fshn_script_url') || "";
         let FEE_MARKETPLACE = { 'Shopee': 0, 'TikTok': 0, 'Tokopedia': 0, 'Lainnya': 0 };
         let cachedItems = [];
+        let lastAutoFilledKode = ""; // Menyimpan kode yang baru saja ter-autofill
 
         // ==========================================
         // UI & NAVIGATION FUNCTIONS
@@ -460,27 +438,34 @@
         // ==========================================
         // DYNAMIC VARIANTS & IMAGE UPLOAD
         // ==========================================
-        function addVariantRow() {
+        
+        // Fungsi untuk menambah baris warna (Bisa secara manual atau dipanggil otomatis)
+        function addVariantRow(warna = '', fotoBase64 = '') {
             const container = document.getElementById('variantsContainer');
             const newRow = document.createElement('div');
             newRow.className = "variant-row flex flex-col md:flex-row gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50 relative";
+
+            const iconClass = fotoBase64 ? 'text-gray-400 text-lg var-foto-icon hidden' : 'text-gray-400 text-lg var-foto-icon';
+            const previewClass = fotoBase64 ? 'var-foto-preview absolute inset-0 w-full h-full object-cover' : 'var-foto-preview absolute inset-0 w-full h-full object-cover hidden';
+
+            // HTML Varian: Kolom Jumlah tidak ada atribut 'required' agar tidak error jika dikosongkan
             newRow.innerHTML = `
                 <div class="w-full md:w-5/12">
                     <label class="block text-xs font-medium text-gray-700 mb-1">Warna</label>
-                    <input type="text" class="var-warna w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-navy-500 outline-none text-sm" required placeholder="Cth: Hitam">
+                    <input type="text" class="var-warna w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-navy-500 outline-none text-sm" placeholder="Cth: Hitam" value="${warna}">
                 </div>
                 <div class="w-full md:w-3/12">
                     <label class="block text-xs font-medium text-gray-700 mb-1">Jumlah (Qty)</label>
-                    <input type="number" min="1" class="var-jumlah w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-navy-500 outline-none text-sm" required placeholder="0">
+                    <input type="number" min="1" class="var-jumlah w-full border border-gray-300 p-2 rounded focus:ring-2 focus:ring-navy-500 outline-none text-sm" placeholder="Isi Qty">
                 </div>
                 <div class="w-full md:w-auto flex-1 flex items-end gap-3">
                     <div class="flex-1">
                         <label class="block text-xs font-medium text-gray-700 mb-1 text-center">Foto</label>
                         <label class="flex items-center justify-center w-full h-[42px] border-2 border-gray-300 border-dashed rounded cursor-pointer bg-white hover:bg-gray-100 overflow-hidden relative" title="Upload Foto">
-                            <span class="text-gray-400 text-lg var-foto-icon">📷</span>
-                            <img class="var-foto-preview absolute inset-0 w-full h-full object-cover hidden" />
+                            <span class="${iconClass}">📷</span>
+                            <img class="${previewClass}" src="${fotoBase64}" />
                             <input type="file" class="hidden var-foto-input" accept="image/*" onchange="handleVariantImage(this)">
-                            <input type="hidden" class="var-foto-base64">
+                            <input type="hidden" class="var-foto-base64" value="${fotoBase64}">
                         </label>
                     </div>
                     <button type="button" onclick="removeVariantRow(this)" class="var-remove-btn text-red-500 hover:bg-red-100 p-2 rounded transition-colors" title="Hapus Warna">
@@ -500,23 +485,16 @@
         function updateRemoveButtons() {
             const btns = document.querySelectorAll('.var-remove-btn');
             btns.forEach(btn => {
+                // Tombol hapus sembunyi jika hanya tersisa 1 baris
                 btn.style.display = btns.length === 1 ? 'none' : 'block';
             });
         }
 
         function resetVariants() {
             const container = document.getElementById('variantsContainer');
-            const rows = container.querySelectorAll('.variant-row');
-            for(let i=1; i<rows.length; i++) rows[i].remove();
-            
-            const firstRow = container.querySelector('.variant-row');
-            firstRow.querySelector('.var-warna').value = '';
-            firstRow.querySelector('.var-jumlah').value = '';
-            firstRow.querySelector('.var-foto-base64').value = '';
-            firstRow.querySelector('.var-foto-input').value = '';
-            firstRow.querySelector('.var-foto-preview').classList.add('hidden');
-            firstRow.querySelector('.var-foto-icon').classList.remove('hidden');
-            updateRemoveButtons();
+            container.innerHTML = '';
+            addVariantRow(); // Buat 1 baris kosong default
+            lastAutoFilledKode = "";
         }
 
         function handleVariantImage(input) {
@@ -565,11 +543,30 @@
         function handleKodeChange(type) {
             if (type === 'masuk') {
                 const kode = document.getElementById('inKode').value;
-                const item = cachedItems.find(i => i.kode === kode); // Cari info kode tersebut
+                if(!kode) return;
+
+                // Cari semua varian barang dengan kode yang diinput
+                const matchingItems = cachedItems.filter(i => i.kode === kode); 
                 
-                if (item) {
-                    if(document.getElementById('inHPP')) document.getElementById('inHPP').value = item.hpp || '';
-                    if(document.getElementById('inHarga')) document.getElementById('inHarga').value = item.harga || '';
+                if (matchingItems.length > 0) {
+                    // Hanya otomatis buat baris warna jika kodenya baru saja berubah menjadi kode lain
+                    if (kode !== lastAutoFilledKode) {
+                        document.getElementById('inHPP').value = matchingItems[0].hpp || '';
+                        document.getElementById('inHarga').value = matchingItems[0].harga || '';
+
+                        // Bersihkan container warna dan isi ulang otomatis dengan data dari database
+                        const container = document.getElementById('variantsContainer');
+                        container.innerHTML = ''; 
+
+                        matchingItems.forEach(item => {
+                            const warnaVal = item.warna === "NO_COLOR" ? "" : (item.warna || "");
+                            addVariantRow(warnaVal, item.foto || '');
+                        });
+
+                        lastAutoFilledKode = kode;
+                    }
+                } else {
+                    lastAutoFilledKode = ""; // Reset jika mengetik kode baru
                 }
             }
         }
@@ -895,19 +892,21 @@
             const harga = document.getElementById('inHarga').value;
             const tanggal = document.getElementById('inTanggal').value;
             
-            // Loop semua varian yang diisi
+            // Loop dan filter varian yang isi Jumlah/Qty-nya valid (> 0)
             const variants = [];
             document.querySelectorAll('.variant-row').forEach(row => {
                 const warna = row.querySelector('.var-warna').value;
                 const jumlah = row.querySelector('.var-jumlah').value;
                 const foto = row.querySelector('.var-foto-base64').value;
-                if(warna && jumlah) {
+                
+                // Pastikan yang disimpan hanya yang jumlahnya diisi
+                if(warna && jumlah && parseInt(jumlah) > 0) {
                     variants.push({ warna, jumlah, foto });
                 }
             });
 
             if(variants.length === 0) {
-                showToast('Harap isi minimal 1 Warna dan Jumlah.', false);
+                showToast('Harap isi minimal 1 Warna beserta Jumlah Masuknya (Qty).', false);
                 return;
             }
 
@@ -992,7 +991,9 @@
             const today = date.toISOString().split('T')[0];
             document.getElementById('dashStart').value = firstDay;
             document.getElementById('dashEnd').value = today;
-            updateRemoveButtons();
+            
+            // Inisialisasi formulir stok masuk agar ada 1 baris kosong di awal
+            resetVariants();
         };
 
     </script>
