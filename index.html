@@ -169,16 +169,30 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Kode Barang (Pilih / Ketik Manual)</label>
                             <!-- Menggunakan Input dengan Datalist untuk pencarian & input manual -->
-                            <input list="inKodeList" id="inKode" oninput="autoFillNamaDatalist('inKode', 'inNama', 'inHPP')" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none bg-white" placeholder="Ketik atau cari kode..." autocomplete="off">
+                            <input list="inKodeList" id="inKode" oninput="autoFillHPP('inKode', 'inHPP')" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none bg-white" placeholder="Ketik atau cari kode..." autocomplete="off">
                             <datalist id="inKodeList">
                                 <!-- Options diisi dari JS -->
                             </datalist>
                         </div>
+
+                        <!-- INPUT UPLOAD FOTO BARANG (PENGGANTI NAMA BARANG) -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Barang</label>
-                            <!-- Input bisa diedit secara manual -->
-                            <input type="text" id="inNama" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none" placeholder="Otomatis terisi atau ketik manual...">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Upload Foto Barang</label>
+                            <div class="mt-1 flex items-center justify-center w-full">
+                                <label for="inFoto" class="flex flex-col items-center justify-center w-full h-40 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 relative overflow-hidden">
+                                    <div id="fotoPlaceholder" class="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                                        </svg>
+                                        <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Klik untuk upload foto</span></p>
+                                        <p class="text-xs text-gray-500">PNG, JPG atau JPEG</p>
+                                    </div>
+                                    <img id="inFotoPreview" class="absolute inset-0 w-full h-full object-contain hidden bg-white" />
+                                    <input id="inFoto" type="file" class="hidden" accept="image/*" onchange="previewImage(event)" />
+                                </label>
+                            </div>
                         </div>
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">HPP (Modal)</label>
                             <input type="number" id="inHPP" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none" placeholder="Rp">
@@ -187,7 +201,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Masuk (Qty)</label>
                             <input type="number" id="inJumlah" min="1" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none">
                         </div>
-                        <p class="text-xs text-gray-500">* Jika barang belum terdaftar, Anda dapat langsung mengetik Kode dan Nama Barang baru di atas.</p>
+                        <p class="text-xs text-gray-500">* Jika mengupload foto, foto otomatis tersimpan/diperbarui di Daftar Barang Master.</p>
                         <button type="submit" class="w-full bg-green-600 text-white font-medium py-2.5 rounded-md hover:bg-green-700 transition shadow-sm">Simpan Stok Masuk</button>
                     </form>
                 </div>
@@ -260,7 +274,7 @@
             <section id="daftarBarang" class="tab-content">
                 
                 <!-- Tabel Daftar Barang -->
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden border-t-4 border-navy-700 mt-6">
                     <div class="p-4 border-b flex justify-between items-center bg-gray-50">
                         <h3 class="text-lg font-bold text-navy-800">Daftar Semua Barang</h3>
                         <button onclick="fetchItems()" class="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
@@ -271,6 +285,7 @@
                         <table class="w-full text-left text-sm whitespace-nowrap">
                             <thead class="bg-navy-800 text-white">
                                 <tr>
+                                    <th class="p-3 w-16 text-center">Foto</th>
                                     <th class="p-3">Kode Barang</th>
                                     <th class="p-3">Nama Barang</th>
                                     <th class="p-3">HPP (Rp)</th>
@@ -279,7 +294,7 @@
                                 </tr>
                             </thead>
                             <tbody id="itemsTbody" class="divide-y divide-gray-200">
-                                <tr><td colspan="5" class="p-4 text-center text-gray-500">Memuat data dari database...</td></tr>
+                                <tr><td colspan="6" class="p-4 text-center text-gray-500">Memuat data dari database...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -368,7 +383,6 @@
         let SCRIPT_URL = localStorage.getItem('fshn_script_url') || "";
 
         // --- PENGATURAN POTONGAN ADMIN (PERSEN %) ---
-        // Nilai default, akan diperbarui otomatis dari Google Spreadsheet
         let FEE_MARKETPLACE = {
             'Shopee': 0,     
             'TikTok': 0,     
@@ -378,6 +392,7 @@
 
         // State Global
         let cachedItems = [];
+        let currentBase64Foto = ""; // Menampung data foto yang dipilih
 
         // ==========================================
         // UI FUNCTIONS
@@ -432,6 +447,54 @@
         }
 
         // ==========================================
+        // LOGIKA UPLOAD & KOMPRES FOTO
+        // ==========================================
+        function previewImage(event) {
+            const file = event.target.files[0];
+            const placeholder = document.getElementById('fotoPlaceholder');
+            const preview = document.getElementById('inFotoPreview');
+
+            if(!file) {
+                currentBase64Foto = "";
+                preview.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // Kompres gambar dengan Canvas agar Spreadsheet tidak error kepenuhan (max 400px)
+                    const canvas = document.createElement('canvas');
+                    const MAX_SIZE = 400;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                    } else {
+                        if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                    }
+                    
+                    canvas.width = width; 
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Konversi ke base64 dengan kualitas 60% untuk menghemat string limit
+                    currentBase64Foto = canvas.toDataURL('image/jpeg', 0.6); 
+
+                    preview.src = currentBase64Foto;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        // ==========================================
         // PENGATURAN URL SCRIPT
         // ==========================================
         function saveSettings() {
@@ -457,7 +520,7 @@
             fetchFees();
             fetchItems();
             
-            // Pindah ke dashboard (loadDashboard otomatis dipanggil oleh switchTab)
+            // Pindah ke dashboard 
             const btnDashboard = document.getElementById('btnDashboard');
             switchTab('dashboard', btnDashboard);
         }
@@ -484,12 +547,10 @@
             const hargaJualAwal = parseFloat(item.harga) || 0;
             const persentaseFee = FEE_MARKETPLACE[mp] || 0;
             
-            // Hitung potongan (Harga x Persen Admin)
             const nominalPotongan = (hargaJualAwal * persentaseFee) / 100;
             const hargaBersihPerItem = hargaJualAwal - nominalPotongan;
             const totalKeuntunganBersih = hargaBersihPerItem * qty;
 
-            // Tampilkan di UI
             document.getElementById('detHargaJual').innerText = formatRupiah(hargaJualAwal);
             document.getElementById('lblMpFee').innerText = `(${persentaseFee}%)`;
             document.getElementById('detPotongan').innerText = "- " + formatRupiah(nominalPotongan);
@@ -524,9 +585,7 @@
         }
 
         async function fetchItems() {
-            if(!SCRIPT_URL) {
-                return;
-            }
+            if(!SCRIPT_URL) return;
             
             showLoading(true);
             try {
@@ -540,33 +599,36 @@
                     const tbody = document.getElementById('itemsTbody');
                     if(tbody) tbody.innerHTML = '';
                     
-                    // Untuk Stok Masuk (Datalist / Manual)
                     const datalistIn = document.getElementById('inKodeList');
-                    // Untuk Barang Keluar (Select / Dropdown)
                     const selectOut = document.getElementById('outKode');
                     
                     if(datalistIn) datalistIn.innerHTML = '';
                     if(selectOut) selectOut.innerHTML = '<option value="">-- Pilih Kode --</option>';
 
                     if(items.length === 0) {
-                        if(tbody) tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">Belum ada barang terdaftar.</td></tr>`;
+                        if(tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">Belum ada barang terdaftar.</td></tr>`;
                     } else {
                         items.forEach(item => {
+                            // Cek jika ada foto, jika tidak ada pakai placeholder kosong
+                            const imgHtml = item.foto 
+                                ? `<img src="${item.foto}" class="w-12 h-12 object-cover rounded-md border shadow-sm cursor-pointer hover:scale-150 transition-transform origin-left">` 
+                                : `<div class="w-12 h-12 bg-gray-200 rounded-md border flex items-center justify-center text-xs text-gray-400">No Pic</div>`;
+
                             if(tbody) tbody.innerHTML += `
                                 <tr class="hover:bg-gray-50">
+                                    <td class="p-3 text-center">${imgHtml}</td>
                                     <td class="p-3 font-medium text-navy-700">${item.kode}</td>
-                                    <td class="p-3">${item.nama}</td>
+                                    <td class="p-3">${item.nama || "-"}</td>
                                     <td class="p-3">${formatRupiah(item.hpp)}</td>
                                     <td class="p-3">${formatRupiah(item.harga)}</td>
                                     <td class="p-3 font-bold ${item.stok <= 5 ? 'text-red-500' : 'text-green-600'}">${item.stok}</td>
                                 </tr>
                             `;
                             
-                            // Tambahkan ke opsi Stok Masuk
-                            if(datalistIn) datalistIn.innerHTML += `<option value="${item.kode}">${item.nama}</option>`;
-                            
-                            // Tambahkan ke opsi Barang Keluar
-                            if(selectOut) selectOut.innerHTML += `<option value="${item.kode}">${item.kode} - ${item.nama}</option>`;
+                            // Tambahkan nama untuk dropdown/datalist jika tidak kosong
+                            const displayName = item.nama ? item.nama : item.kode;
+                            if(datalistIn) datalistIn.innerHTML += `<option value="${item.kode}">${displayName}</option>`;
+                            if(selectOut) selectOut.innerHTML += `<option value="${item.kode}">${item.kode} - ${displayName}</option>`;
                         });
                     }
                 } catch (parseErr) {
@@ -615,7 +677,7 @@
                                 <tr class="hover:bg-gray-50">
                                     <td class="p-3 text-center font-bold text-gray-500">#${index + 1}</td>
                                     <td class="p-3 text-navy-700 font-medium">${item.kode}</td>
-                                    <td class="p-3">${item.nama}</td>
+                                    <td class="p-3">${item.nama || "-"}</td>
                                     <td class="p-3 font-bold text-red-600">${item.qty} Unit</td>
                                 </tr>
                             `;
@@ -650,7 +712,6 @@
                     const tbody = document.getElementById('revenueTbody');
                     tbody.innerHTML = '';
 
-                    // Variabel untuk menampung pendapatan per-marketplace
                     let sumShopee = 0, sumTiktok = 0, sumTokopedia = 0, sumLainnya = 0, sumGrand = 0;
 
                     if(data.list.length === 0) {
@@ -658,7 +719,6 @@
                     } else {
                         data.list.reverse().forEach(row => {
                             const mp = row.marketplace || 'Lainnya'; 
-                            
                             const barisTotal = parseFloat(row.total) || 0; 
                             const barisHargaSatuan = parseFloat(row.harga) || 0;
 
@@ -677,7 +737,7 @@
                                 <tr class="hover:bg-gray-50">
                                     <td class="p-3 text-gray-600">${row.tanggal}</td>
                                     <td class="p-3"><span class="px-2 py-1 rounded text-xs font-medium ${badgeClass}">${mp}</span></td>
-                                    <td class="p-3 font-medium">${row.kode}<br><span class="text-xs text-gray-500 font-normal">${row.nama}</span></td>
+                                    <td class="p-3 font-medium">${row.kode}<br><span class="text-xs text-gray-500 font-normal">${row.nama || "-"}</span></td>
                                     <td class="p-3 text-center font-bold text-red-600">${row.jumlah}</td>
                                     <td class="p-3 text-right text-gray-600">${formatRupiah(barisHargaSatuan)}</td>
                                     <td class="p-3 text-right font-bold text-navy-800">${formatRupiah(barisTotal)}</td>
@@ -721,9 +781,7 @@
             try {
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8', 
-                    },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify(payload)
                 });
                 const result = await response.json();
@@ -753,16 +811,24 @@
                 action: 'addMasuk',
                 tanggal: document.getElementById('inTanggal').value,
                 kode: document.getElementById('inKode').value,
-                nama: document.getElementById('inNama').value,
+                // Nama dihilangkan sesuai request
                 jumlah: document.getElementById('inJumlah').value,
-                hpp: document.getElementById('inHPP').value
+                hpp: document.getElementById('inHPP').value,
+                foto: currentBase64Foto // Mengirim data Base64 foto
             };
             const success = await postData(payload);
             if(success) {
+                // Reset input manual
                 document.getElementById('inJumlah').value = '';
                 document.getElementById('inKode').value = '';
-                document.getElementById('inNama').value = '';
                 document.getElementById('inHPP').value = '';
+                
+                // Reset foto
+                currentBase64Foto = "";
+                document.getElementById('inFoto').value = "";
+                document.getElementById('inFotoPreview').classList.add('hidden');
+                document.getElementById('fotoPlaceholder').classList.remove('hidden');
+
                 fetchItems(); 
             }
         }
@@ -770,7 +836,6 @@
         async function submitKeluar(e) {
             e.preventDefault();
             
-            // Kalkulasi ulang untuk keamanan data
             const mp = document.getElementById('outMarketplace').value;
             const kode = document.getElementById('outKode').value;
             const qty = parseInt(document.getElementById('outJumlah').value);
@@ -812,17 +877,14 @@
             document.getElementById(inputId).value = item ? item.nama : '';
         }
 
-        // Fungsi Auto Fill untuk Datalist (Stok Masuk)
-        function autoFillNamaDatalist(inputId, namaId, hppId) {
+        // Fungsi Auto Fill untuk Datalist (Stok Masuk - Hanya isi HPP)
+        function autoFillHPP(inputId, hppId) {
             const kode = document.getElementById(inputId).value;
             const item = cachedItems.find(i => i.kode === kode);
-            const namaInput = document.getElementById(namaId);
             const hppInput = document.getElementById(hppId);
             
-            // Jika kode ditemukan di database, isi namanya dan HPP. Jika tidak biarkan user mengetik bebas.
-            if (item) {
-                namaInput.value = item.nama;
-                if (hppInput) hppInput.value = item.hpp;
+            if (item && hppInput) {
+                hppInput.value = item.hpp;
             }
         }
 
@@ -831,15 +893,11 @@
         // ==========================================
         function initApp() {
             if(SCRIPT_URL) {
-                // Set default form value di Pengaturan
                 document.getElementById('settingUrlInput').value = SCRIPT_URL;
-                
-                // Mulai ambil data
                 fetchFees();
                 fetchItems();
                 loadDashboard();
             } else {
-                // Jika belum ada URL sama sekali, arahkan otomatis ke tab Pengaturan
                 showToast('Harap masukkan URL Google Script Anda terlebih dahulu!', false);
                 const btnPengaturan = document.getElementById('btnPengaturan');
                 switchTab('pengaturan', btnPengaturan);
@@ -849,7 +907,6 @@
         window.onload = () => {
             initApp();
             
-            // Set tanggal default untuk dashboard
             const date = new Date();
             const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split('T')[0];
             const today = date.toISOString().split('T')[0];
