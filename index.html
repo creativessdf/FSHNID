@@ -5,24 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventaris Barang FSHN.ID</title>
 
-    <!-- ========================================== -->
-    <!-- MASUKAN URL GOOGLE APPS SCRIPT ANDA DISINI -->
-    <!-- ========================================== -->
-    <script>
-        const SCRIPT_URL = "<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inventaris Barang FSHN.ID</title>
-
-    <!-- ========================================== -->
-    <!-- MASUKAN URL GOOGLE APPS SCRIPT ANDA DISINI -->
-    <!-- ========================================== -->
-    <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4WVqH_zFQDosYE-wUMWWzEofmAQwnEhC8Bpkm8gWBZMPxL-dDisQv9DtO_YN4_tlA/exec"; 
-    </script>
-
     <!-- Menggunakan Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Konfigurasi Tema Navy (Slate) -->
@@ -73,7 +55,7 @@
                 <p class="text-sm text-navy-100 mt-1">Sistem Manajemen Barang</p>
             </div>
             <nav class="mt-4 flex flex-col px-2 gap-1">
-                <button onclick="switchTab('dashboard', this)" class="nav-btn btn-active flex items-center w-full text-left px-4 py-3 rounded-md hover:bg-navy-800 transition">
+                <button id="btnDashboard" onclick="switchTab('dashboard', this)" class="nav-btn btn-active flex items-center w-full text-left px-4 py-3 rounded-md hover:bg-navy-800 transition">
                     📊 Dashboard
                 </button>
                 <button onclick="switchTab('stokMasuk', this)" class="nav-btn flex items-center w-full text-left px-4 py-3 rounded-md hover:bg-navy-800 transition">
@@ -88,11 +70,39 @@
                 <button onclick="switchTab('pendapatan', this)" class="nav-btn flex items-center w-full text-left px-4 py-3 rounded-md hover:bg-navy-800 transition">
                     💰 Total Pendapatan
                 </button>
+                <div class="my-2 border-t border-navy-700"></div>
+                <button id="btnPengaturan" onclick="switchTab('pengaturan', this)" class="nav-btn flex items-center w-full text-left px-4 py-3 rounded-md hover:bg-navy-800 transition text-blue-300">
+                    ⚙️ Pengaturan
+                </button>
             </nav>
         </aside>
 
         <!-- Main Content -->
         <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+
+            <!-- PESAN ERROR KONEKSI (Otomatis muncul jika gagal terhubung) -->
+            <div id="corsErrorBanner" class="hidden bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg shadow-sm">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <span class="text-red-500 text-xl">⚠️</span>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-bold text-red-800">Koneksi ke Database Google Script Diblokir! (Failed to fetch)</h3>
+                        <div class="mt-2 text-sm text-red-700">
+                            <p>Sistem keamanan web mendeteksi bahwa pengaturan akses Google Apps Script Anda belum dibuka untuk umum. Silakan ikuti perbaikan ini:</p>
+                            <ul class="list-disc ml-5 mt-2 space-y-1 font-medium">
+                                <li>Buka editor Google Apps Script Anda.</li>
+                                <li>Klik tombol biru <strong>Terapkan (Deploy)</strong> > <strong>Kelola deployment</strong>.</li>
+                                <li>Klik ikon <strong>Pensil (Edit)</strong>.</li>
+                                <li>Pastikan <strong>Jalankan sebagai</strong> dipilih ke: <span class="bg-red-200 px-1 rounded">Saya (Email Anda)</span>.</li>
+                                <li><span class="text-red-900 font-bold">PENTING:</span> Pastikan <strong>Siapa yang memiliki akses</strong> dipilih ke: <span class="bg-red-200 px-1 rounded">Siapa saja (Anyone)</span>.</li>
+                                <li>Ubah Versi ke <strong>Versi baru (New version)</strong>.</li>
+                                <li>Klik <strong>Terapkan</strong> lalu muat ulang halaman web ini.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <!-- 1. DASHBOARD -->
             <section id="dashboard" class="tab-content active">
@@ -348,10 +358,33 @@
                 </div>
             </section>
 
+            <!-- 6. PENGATURAN KONEKSI -->
+            <section id="pengaturan" class="tab-content">
+                <div class="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto border-t-4 border-blue-500">
+                    <h3 class="text-2xl font-bold text-navy-800 mb-2 border-b pb-2">⚙️ Pengaturan Sistem</h3>
+                    <p class="text-sm text-gray-500 mb-6">Hubungkan aplikasi web ini dengan Database Google Spreadsheet Anda.</p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">URL Google Apps Script</label>
+                            <input type="url" id="settingUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
+                            <p class="text-xs text-gray-400 mt-1">Pastikan URL berakhir dengan kata <span class="font-mono bg-gray-100 px-1 rounded">/exec</span></p>
+                        </div>
+                        <button onclick="saveSettings()" class="w-full bg-blue-600 text-white font-medium py-2.5 rounded-md hover:bg-blue-700 transition shadow-sm">Simpan & Hubungkan Ulang</button>
+                    </div>
+                </div>
+            </section>
+
         </main>
     </div>
 
     <script>
+        // ==========================================
+        // KONFIGURASI GLOBAL
+        // ==========================================
+        // URL diambil dari localStorage agar tersimpan di browser
+        let SCRIPT_URL = localStorage.getItem('fshn_script_url') || "";
+
         // --- PENGATURAN POTONGAN ADMIN (PERSEN %) ---
         // Nilai default, akan diperbarui otomatis dari Google Spreadsheet
         let FEE_MARKETPLACE = {
@@ -372,14 +405,23 @@
             document.getElementById(tabId).classList.add('active');
 
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('btn-active'));
-            btnElement.classList.add('btn-active');
+            if(btnElement) btnElement.classList.add('btn-active');
 
             const today = new Date().toISOString().split('T')[0];
             if(tabId === 'stokMasuk') document.getElementById('inTanggal').value = today;
             if(tabId === 'barangKeluar') document.getElementById('outTanggal').value = today;
 
+            // Tutup pesan error cors setiap kali ganti tab agar rapi
+            document.getElementById('corsErrorBanner').classList.add('hidden');
+
+            // Jika URL Script belum ada, batalkan fetch data
+            if(!SCRIPT_URL && tabId !== 'pengaturan') {
+                return;
+            }
+
             if(tabId === 'dashboard') loadDashboard();
             if(tabId === 'pendapatan') loadRevenue();
+            if(tabId === 'daftarBarang') fetchItems();
         }
 
         function showLoading(show) {
@@ -399,8 +441,43 @@
             }, 3000);
         }
 
+        function showCorsError() {
+            document.getElementById('corsErrorBanner').classList.remove('hidden');
+        }
+
         function formatRupiah(angka) {
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka || 0);
+        }
+
+        // ==========================================
+        // PENGATURAN URL SCRIPT
+        // ==========================================
+        function saveSettings() {
+            let inputUrl = document.getElementById('settingUrlInput').value.trim();
+            
+            if (!inputUrl.startsWith('https://script.google.com/')) {
+                showToast('Format URL salah! Harus berupa link Google Script.', false);
+                return;
+            }
+
+            // Bersihkan slash di akhir url jika user tidak sengaja menambahkan
+            if (inputUrl.endsWith('/')) {
+                inputUrl = inputUrl.slice(0, -1);
+            }
+
+            // Simpan ke variabel dan local storage
+            SCRIPT_URL = inputUrl;
+            localStorage.setItem('fshn_script_url', SCRIPT_URL);
+            
+            showToast('URL berhasil disimpan! Mencoba terhubung...', true);
+            
+            // Panggil API di background
+            fetchFees();
+            fetchItems();
+            
+            // Pindah ke dashboard (loadDashboard otomatis dipanggil oleh switchTab)
+            const btnDashboard = document.getElementById('btnDashboard');
+            switchTab('dashboard', btnDashboard);
         }
 
         // ==========================================
@@ -448,8 +525,7 @@
         async function fetchFees() {
             if(!SCRIPT_URL) return;
             try {
-                // Menghapus { redirect: 'follow' } eksplisit karena sering bentrok dengan iframe/blob sandbox
-                const response = await fetch(`${SCRIPT_URL}?action=getFees`);
+                const response = await fetch(`${SCRIPT_URL}?action=getFees`, { method: 'GET', mode: 'cors' });
                 const textResponse = await response.text(); 
                 
                 try {
@@ -458,19 +534,21 @@
                         FEE_MARKETPLACE = result.fees;
                     }
                 } catch (parseError) {
-                    console.warn('Peringatan: Google Script tidak mereturn JSON valid. Memakai fee default 0%. Pastikan Anda sudah Deploy ke "Versi Baru". Respons:', textResponse);
+                    console.warn('Peringatan: Google Script tidak mereturn JSON valid.');
                 }
             } catch (error) {
-                console.error('Gagal menghubungi database Google Script (getFees):', error);
+                console.error('Gagal memuat Fees:', error);
             }
         }
 
         async function fetchItems() {
-            if(!SCRIPT_URL) return;
+            if(!SCRIPT_URL) {
+                return;
+            }
             
             showLoading(true);
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=getItems`);
+                const response = await fetch(`${SCRIPT_URL}?action=getItems`, { method: 'GET', mode: 'cors' });
                 const textResponse = await response.text(); 
                 
                 try {
@@ -478,18 +556,18 @@
                     cachedItems = items;
                     
                     const tbody = document.getElementById('itemsTbody');
-                    tbody.innerHTML = '';
+                    if(tbody) tbody.innerHTML = '';
                     
                     const selectIn = document.getElementById('inKode');
                     const selectOut = document.getElementById('outKode');
-                    selectIn.innerHTML = '<option value="">-- Pilih Kode --</option>';
-                    selectOut.innerHTML = '<option value="">-- Pilih Kode --</option>';
+                    if(selectIn) selectIn.innerHTML = '<option value="">-- Pilih Kode --</option>';
+                    if(selectOut) selectOut.innerHTML = '<option value="">-- Pilih Kode --</option>';
 
                     if(items.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">Belum ada barang terdaftar.</td></tr>`;
+                        if(tbody) tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">Belum ada barang terdaftar.</td></tr>`;
                     } else {
                         items.forEach(item => {
-                            tbody.innerHTML += `
+                            if(tbody) tbody.innerHTML += `
                                 <tr class="hover:bg-gray-50">
                                     <td class="p-3 font-medium text-navy-700">${item.kode}</td>
                                     <td class="p-3">${item.nama}</td>
@@ -498,26 +576,28 @@
                                     <td class="p-3 font-bold ${item.stok <= 5 ? 'text-red-500' : 'text-green-600'}">${item.stok}</td>
                                 </tr>
                             `;
-                            selectIn.innerHTML += `<option value="${item.kode}">${item.kode} - ${item.nama}</option>`;
-                            selectOut.innerHTML += `<option value="${item.kode}">${item.kode} - ${item.nama}</option>`;
+                            if(selectIn) selectIn.innerHTML += `<option value="${item.kode}">${item.kode} - ${item.nama}</option>`;
+                            if(selectOut) selectOut.innerHTML += `<option value="${item.kode}">${item.kode} - ${item.nama}</option>`;
                         });
                     }
                 } catch (parseErr) {
-                    console.error("Error parse getItems. Respons dari server:", textResponse);
-                    showToast('Gagal membaca data Master Barang! Pastikan setelan akses "Siapa saja"', false);
+                    console.error("Error parse getItems:", textResponse);
+                    showToast('Gagal membaca data Master Barang!', false);
                 }
             } catch (error) {
                 console.error("Error fetchItems:", error);
-                if (error.message.includes('Failed to fetch')) {
-                    showToast('Koneksi Ditolak! Pastikan Script dideploy ke "Siapa saja" (Anyone)', false);
+                if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+                    showCorsError();
                 } else {
-                    showToast('Gagal terhubung ke server', false);
+                    showToast('Koneksi Ditolak! Pastikan Script aktif.', false);
                 }
             }
             showLoading(false);
         }
 
         async function loadDashboard() {
+            if(!SCRIPT_URL) return;
+
             showLoading(true);
             const start = document.getElementById('dashStart').value;
             const end = document.getElementById('dashEnd').value;
@@ -527,7 +607,7 @@
             if(end) url += `&endDate=${end}`;
 
             try {
-                const response = await fetch(url);
+                const response = await fetch(url, { method: 'GET', mode: 'cors' });
                 const textResponse = await response.text();
                 
                 try {
@@ -553,13 +633,13 @@
                         });
                     }
                 } catch (parseErr) {
-                    console.error("Error parse Dashboard. Respons server:", textResponse);
-                    showToast('Gagal membaca data Dashboard (Cek Konsol)', false);
+                    console.error("Error parse Dashboard:", textResponse);
+                    showToast('Gagal membaca data Dashboard', false);
                 }
             } catch (error) {
                 console.error("Error loadDashboard:", error);
-                if (error.message.includes('Failed to fetch')) {
-                    showToast('Koneksi Ditolak (CORS)! Cek setelan "Siapa saja" di Apps Script.', false);
+                if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+                    showCorsError();
                 } else {
                     showToast('Gagal terhubung ke Dashboard.', false);
                 }
@@ -568,9 +648,11 @@
         }
 
         async function loadRevenue() {
+            if(!SCRIPT_URL) return;
+
             showLoading(true);
             try {
-                const response = await fetch(`${SCRIPT_URL}?action=getRevenue`);
+                const response = await fetch(`${SCRIPT_URL}?action=getRevenue`, { method: 'GET', mode: 'cors' });
                 const textResponse = await response.text();
                 
                 try {
@@ -621,13 +703,17 @@
                     document.getElementById('revTokopedia').innerText = formatRupiah(sumTokopedia);
                     document.getElementById('revLainnya').innerText = formatRupiah(sumLainnya);
                 } catch (parseErr) {
-                    console.error("Error parse Revenue. Respons server:", textResponse);
+                    console.error("Error parse Revenue:", textResponse);
                     showToast('Gagal membaca Laporan Pendapatan', false);
                 }
 
             } catch (error) {
                 console.error("Error loadRevenue:", error);
-                showToast('Gagal terhubung ke Laporan', false);
+                if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+                    showCorsError();
+                } else {
+                    showToast('Gagal terhubung ke Laporan', false);
+                }
             }
             showLoading(false);
         }
@@ -637,6 +723,11 @@
         // ==========================================
 
         async function postData(payload) {
+            if(!SCRIPT_URL) {
+                showToast('URL Google Script belum diatur!', false);
+                return false;
+            }
+
             showLoading(true);
             try {
                 const response = await fetch(SCRIPT_URL, {
@@ -658,7 +749,11 @@
                 }
             } catch (error) {
                 showLoading(false);
-                showToast('Data dikirim, silahkan muat ulang halaman jika tidak update (keterbatasan CORS).', true);
+                if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+                    showCorsError();
+                    return false;
+                }
+                showToast('Data dikirim, silahkan muat ulang halaman jika tidak update.', true);
                 return true; 
             }
         }
@@ -718,7 +813,7 @@
                 jumlah: qty,
                 marketplace: mp,
                 potonganAdmin: potonganAdmin, 
-                hargaJual: hargaBersih, // kita kirim harga yang sudah dipotong
+                hargaJual: hargaBersih, 
                 totalPendapatan: totalKeuntungan 
             };
             
@@ -737,744 +832,30 @@
             document.getElementById(inputId).value = item ? item.nama : '';
         }
 
-        // Init App On Load
+        // ==========================================
+        // INIT PADA SAAT HALAMAN DIMUAT
+        // ==========================================
+        function initApp() {
+            if(SCRIPT_URL) {
+                // Set default form value di Pengaturan
+                document.getElementById('settingUrlInput').value = SCRIPT_URL;
+                
+                // Mulai ambil data
+                fetchFees();
+                fetchItems();
+                loadDashboard();
+            } else {
+                // Jika belum ada URL sama sekali, arahkan otomatis ke tab Pengaturan
+                showToast('Harap masukkan URL Google Script Anda terlebih dahulu!', false);
+                const btnPengaturan = document.getElementById('btnPengaturan');
+                switchTab('pengaturan', btnPengaturan);
+            }
+        }
+
         window.onload = () => {
-            fetchFees();
-            fetchItems();
-            loadDashboard();
+            initApp();
             
-            const date = new Date();
-            const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split('T')[0];
-            const today = date.toISOString().split('T')[0];
-            document.getElementById('dashStart').value = firstDay;
-            document.getElementById('dashEnd').value = today;
-        };
-
-    </script>
-</body>
-</html>"; 
-    </script>
-
-    <!-- Menggunakan Tailwind CSS via CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Konfigurasi Tema Navy (Slate) -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        navy: {
-                            50: '#f0f4f8',
-                            100: '#d9e2ec',
-                            500: '#334e68',
-                            700: '#243b53',
-                            800: '#102a43',
-                            900: '#0b1c2c',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .btn-active { background-color: #243b53; border-left: 4px solid #60a5fa; }
-    </style>
-</head>
-<body class="bg-gray-100 min-h-screen text-navy-800">
-
-    <!-- Loading Overlay -->
-    <div id="loading" class="fixed inset-0 bg-white/80 z-50 flex flex-col justify-center items-center hidden">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-700"></div>
-        <p class="mt-4 text-navy-700 font-medium">Memproses Data...</p>
-    </div>
-
-    <!-- Notification Toast -->
-    <div id="toast" class="fixed top-5 right-5 z-50 p-4 rounded-lg shadow-lg text-white font-medium transform transition-all duration-300 translate-x-full opacity-0"></div>
-
-    <div class="flex flex-col md:flex-row min-h-screen">
-        
-        <!-- Sidebar Menu -->
-        <aside class="w-full md:w-64 bg-navy-900 text-white flex-shrink-0">
-            <div class="p-6 border-b border-navy-700">
-                <h2 class="text-2xl font-bold text-blue-400">FSHN.ID</h2>
-                <p class="text-sm text-navy-100 mt-1">Sistem Manajemen Barang</p>
-            </div>
-            <nav class="mt-4 flex flex-col px-2 gap-1">
-                <button onclick="switchTab('dashboard', this)" class="nav-btn btn-active flex items-center w-full text-left px-4 py-3 rounded-md hover:bg-navy-800 transition">
-                    📊 Dashboard
-                </button>
-                <button onclick="switchTab('stokMasuk', this)" class="nav-btn flex items-center w-full text-left px-4 py-3 rounded-md hover:bg-navy-800 transition">
-                    📥 Input Stok Masuk
-                </button>
-                <button onclick="switchTab('barangKeluar', this)" class="nav-btn flex items-center w-full text-left px-4 py-3 rounded-md hover:bg-navy-800 transition">
-                    📤 Input Barang Keluar
-                </button>
-                <button onclick="switchTab('daftarBarang', this)" class="nav-btn flex items-center w-full text-left px-4 py-3 rounded-md hover:bg-navy-800 transition">
-                    📦 Daftar Barang
-                </button>
-                <button onclick="switchTab('pendapatan', this)" class="nav-btn flex items-center w-full text-left px-4 py-3 rounded-md hover:bg-navy-800 transition">
-                    💰 Total Pendapatan
-                </button>
-            </nav>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="flex-1 p-4 md:p-8 overflow-y-auto">
-            
-            <!-- 1. DASHBOARD -->
-            <section id="dashboard" class="tab-content active">
-                <div class="mb-6 flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-lg shadow-sm">
-                    <h3 class="text-2xl font-bold text-navy-800 mb-4 md:mb-0">Ringkasan Dashboard</h3>
-                    <div class="flex flex-col md:flex-row gap-2">
-                        <div>
-                            <label class="text-xs text-gray-500">Mulai Tanggal</label>
-                            <input type="date" id="dashStart" class="w-full border p-2 rounded text-sm focus:ring focus:ring-blue-200">
-                        </div>
-                        <div>
-                            <label class="text-xs text-gray-500">Sampai Tanggal</label>
-                            <input type="date" id="dashEnd" class="w-full border p-2 rounded text-sm focus:ring focus:ring-blue-200">
-                        </div>
-                        <div class="flex items-end">
-                            <button onclick="loadDashboard()" class="bg-navy-700 text-white px-4 py-2 rounded text-sm hover:bg-navy-800 w-full md:w-auto">Filter</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-green-500">
-                        <p class="text-sm text-gray-500 font-medium">Total Stok Masuk</p>
-                        <h4 class="text-4xl font-bold text-green-600 mt-2" id="dashTotalMasuk">0</h4>
-                        <p class="text-xs text-gray-400 mt-1">Berdasarkan filter tanggal</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm border-l-4 border-red-500">
-                        <p class="text-sm text-gray-500 font-medium">Total Barang Keluar</p>
-                        <h4 class="text-4xl font-bold text-red-600 mt-2" id="dashTotalKeluar">0</h4>
-                        <p class="text-xs text-gray-400 mt-1">Berdasarkan filter tanggal</p>
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-lg shadow-sm">
-                    <h4 class="text-lg font-bold text-navy-800 mb-4">🏆 Peringkat Barang Paling Banyak Keluar</h4>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm">
-                            <thead class="bg-gray-50 text-gray-600 border-b">
-                                <tr>
-                                    <th class="p-3">Peringkat</th>
-                                    <th class="p-3">Kode Barang</th>
-                                    <th class="p-3">Nama Barang</th>
-                                    <th class="p-3">Total Keluar (Qty)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="topItemsTbody" class="divide-y">
-                                <!-- Data diisi dari JS -->
-                                <tr><td colspan="4" class="p-3 text-center text-gray-500">Memuat data...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 2. STOK MASUK -->
-            <section id="stokMasuk" class="tab-content">
-                <div class="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto">
-                    <h3 class="text-2xl font-bold text-navy-800 mb-6 border-b pb-2">Input Stok Masuk</h3>
-                    <form id="formMasuk" onsubmit="submitMasuk(event)" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Masuk</label>
-                            <input type="date" id="inTanggal" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Kode Barang</label>
-                            <select id="inKode" onchange="autoFillNama('inKode', 'inNama')" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none bg-white">
-                                <option value="">-- Pilih Kode --</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Barang (Otomatis)</label>
-                            <input type="text" id="inNama" readonly class="w-full bg-gray-100 border border-gray-300 p-2.5 rounded-md text-gray-600 cursor-not-allowed">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Masuk (Qty)</label>
-                            <input type="number" id="inJumlah" min="1" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none">
-                        </div>
-                        <button type="submit" class="w-full bg-green-600 text-white font-medium py-2.5 rounded-md hover:bg-green-700 transition shadow-sm">Simpan Stok Masuk</button>
-                    </form>
-                </div>
-            </section>
-
-            <!-- 3. BARANG KELUAR -->
-            <section id="barangKeluar" class="tab-content">
-                <div class="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto border-t-4 border-red-500">
-                    <h3 class="text-2xl font-bold text-navy-800 mb-6 border-b pb-2">Input Barang Keluar</h3>
-                    <form id="formKeluar" onsubmit="submitKeluar(event)" class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Keluar</label>
-                            <input type="date" id="outTanggal" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none">
-                        </div>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Marketplace / Channel</label>
-                                <select id="outMarketplace" onchange="calculateProfit()" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none bg-white">
-                                    <option value="">-- Pilih Marketplace --</option>
-                                    <option value="Shopee">Shopee</option>
-                                    <option value="TikTok">TikTok Shop</option>
-                                    <option value="Tokopedia">Tokopedia</option>
-                                    <option value="Lainnya">Lainnya / Offline (Tanpa Potongan)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Kode Barang</label>
-                                <select id="outKode" onchange="autoFillNama('outKode', 'outNama'); calculateProfit()" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none bg-white">
-                                    <option value="">-- Pilih Kode --</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Barang (Otomatis)</label>
-                            <input type="text" id="outNama" readonly class="w-full bg-gray-100 border border-gray-300 p-2.5 rounded-md text-gray-600 cursor-not-allowed">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Keluar (Qty)</label>
-                            <input type="number" id="outJumlah" min="1" oninput="calculateProfit()" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none">
-                        </div>
-
-                        <!-- PANEL RINCIAN KEUNTUNGAN (Otomatis Muncul) -->
-                        <div id="profitPanel" class="hidden bg-blue-50 border border-blue-200 p-4 rounded-lg mt-4">
-                            <h4 class="text-sm font-bold text-navy-800 mb-2 border-b border-blue-200 pb-1">Estimasi Keuntungan Bersih</h4>
-                            <div class="grid grid-cols-2 gap-2 text-sm">
-                                <div class="text-gray-600">Harga Jual Normal:</div>
-                                <div class="text-right font-medium" id="detHargaJual">Rp 0</div>
-                                
-                                <div class="text-gray-600">Potongan Admin <span id="lblMpFee" class="font-semibold text-red-500"></span>:</div>
-                                <div class="text-right font-medium text-red-500" id="detPotongan">- Rp 0</div>
-                                
-                                <div class="text-gray-600 pt-1 border-t border-blue-100 mt-1">Harga Bersih / Item:</div>
-                                <div class="text-right font-bold text-green-600 pt-1 border-t border-blue-100 mt-1" id="detHargaBersih">Rp 0</div>
-                                
-                                <div class="text-gray-600 font-bold mt-2">Total Keuntungan (<span id="detQty">0</span> pcs):</div>
-                                <div class="text-right font-bold text-navy-800 mt-2 text-lg" id="detTotalKeuntungan">Rp 0</div>
-                            </div>
-                        </div>
-
-                        <p class="text-xs text-gray-500">* Total Keuntungan akan dicatat ke laporan pendapatan berdasarkan Harga Bersih × Jumlah Keluar.</p>
-                        <button type="submit" class="w-full bg-red-600 text-white font-medium py-2.5 rounded-md hover:bg-red-700 transition shadow-sm">Catat Barang Keluar</button>
-                    </form>
-                </div>
-            </section>
-
-            <!-- 4. DAFTAR BARANG (MASTER DATA) -->
-            <section id="daftarBarang" class="tab-content">
-                
-                <!-- Form Tambah Barang -->
-                <div class="bg-white p-6 rounded-lg shadow-sm mb-6 border-t-4 border-navy-700">
-                    <h3 class="text-lg font-bold text-navy-800 mb-4">➕ Tambah Barang Baru</h3>
-                    <form id="formBarang" onsubmit="submitBarang(event)" class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                        <div class="md:col-span-1">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Kode Barang</label>
-                            <input type="text" id="brgKode" required placeholder="Cth: BRG-01" class="w-full border border-gray-300 p-2 rounded focus:ring-1 focus:ring-navy-500 outline-none text-sm">
-                        </div>
-                        <div class="md:col-span-1">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Nama Barang</label>
-                            <input type="text" id="brgNama" required placeholder="Nama lengkap" class="w-full border border-gray-300 p-2 rounded focus:ring-1 focus:ring-navy-500 outline-none text-sm">
-                        </div>
-                        <div class="md:col-span-1">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">HPP (Modal)</label>
-                            <input type="number" id="brgHPP" required placeholder="Rp" class="w-full border border-gray-300 p-2 rounded focus:ring-1 focus:ring-navy-500 outline-none text-sm">
-                        </div>
-                        <div class="md:col-span-1">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Harga Jual</label>
-                            <input type="number" id="brgHarga" required placeholder="Rp" class="w-full border border-gray-300 p-2 rounded focus:ring-1 focus:ring-navy-500 outline-none text-sm">
-                        </div>
-                        <div class="md:col-span-1 flex items-end">
-                            <button type="submit" class="w-full bg-navy-700 text-white font-medium py-2 rounded hover:bg-navy-800 transition text-sm">Simpan</button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Tabel Daftar Barang -->
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-                    <div class="p-4 border-b flex justify-between items-center bg-gray-50">
-                        <h3 class="text-lg font-bold text-navy-800">Daftar Semua Barang</h3>
-                        <button onclick="fetchItems()" class="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1">
-                            🔄 Refresh
-                        </button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm whitespace-nowrap">
-                            <thead class="bg-navy-800 text-white">
-                                <tr>
-                                    <th class="p-3">Kode Barang</th>
-                                    <th class="p-3">Nama Barang</th>
-                                    <th class="p-3">HPP (Rp)</th>
-                                    <th class="p-3">Harga Jual (Rp)</th>
-                                    <th class="p-3">Stok Saat Ini</th>
-                                </tr>
-                            </thead>
-                            <tbody id="itemsTbody" class="divide-y divide-gray-200">
-                                <tr><td colspan="5" class="p-4 text-center text-gray-500">Memuat data dari database...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 5. TOTAL PENDAPATAN -->
-            <section id="pendapatan" class="tab-content">
-                <div class="bg-gradient-to-r from-navy-800 to-blue-600 p-8 rounded-lg shadow-lg text-white mb-6 text-center">
-                    <h3 class="text-xl font-medium text-blue-100 mb-2">Total Pendapatan Bersih (Semua Platform)</h3>
-                    <div class="text-5xl font-bold tracking-tight mb-2" id="grandTotalText">Rp 0</div>
-                    <p class="text-sm text-blue-200">Dihitung dari: Total Keuntungan Bersih setelah dipotong Admin</p>
-                </div>
-
-                <!-- Summary per Marketplace -->
-                <h3 class="text-lg font-bold text-navy-800 mb-3">Pendapatan Berdasarkan Marketplace</h3>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <div class="bg-orange-50 border border-orange-200 p-4 rounded-lg shadow-sm">
-                        <div class="text-orange-600 text-xs font-bold uppercase mb-1">Shopee</div>
-                        <div class="text-xl font-bold text-navy-800" id="revShopee">Rp 0</div>
-                    </div>
-                    <div class="bg-black p-4 rounded-lg shadow-sm border border-gray-700">
-                        <div class="text-white text-xs font-bold uppercase mb-1">TikTok Shop</div>
-                        <div class="text-xl font-bold text-white" id="revTiktok">Rp 0</div>
-                    </div>
-                    <div class="bg-green-50 border border-green-200 p-4 rounded-lg shadow-sm">
-                        <div class="text-green-600 text-xs font-bold uppercase mb-1">Tokopedia</div>
-                        <div class="text-xl font-bold text-navy-800" id="revTokopedia">Rp 0</div>
-                    </div>
-                    <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg shadow-sm">
-                        <div class="text-blue-600 text-xs font-bold uppercase mb-1">Lainnya / Offline</div>
-                        <div class="text-xl font-bold text-navy-800" id="revLainnya">Rp 0</div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden border">
-                    <div class="p-4 border-b flex justify-between items-center bg-gray-50">
-                        <h3 class="text-lg font-bold text-navy-800">Riwayat Penjualan & Pendapatan</h3>
-                        <button onclick="loadRevenue()" class="text-sm text-blue-600 hover:text-blue-800">🔄 Refresh Laporan</button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm whitespace-nowrap">
-                            <thead class="bg-gray-100 text-gray-700">
-                                <tr>
-                                    <th class="p-3">Tanggal</th>
-                                    <th class="p-3">Marketplace</th>
-                                    <th class="p-3">Kode Barang</th>
-                                    <th class="p-3 text-center">Qty</th>
-                                    <th class="p-3 text-right">Hrg Bersih/Item</th>
-                                    <th class="p-3 text-right text-navy-800 font-bold">Total Bersih (Rp)</th>
-                                </tr>
-                            </thead>
-                            <tbody id="revenueTbody" class="divide-y divide-gray-200">
-                                <tr><td colspan="6" class="p-4 text-center text-gray-500">Memuat laporan...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-        </main>
-    </div>
-
-    <script>
-        // --- PENGATURAN POTONGAN ADMIN (PERSEN %) ---
-        // Nilai default, akan diperbarui otomatis dari Google Spreadsheet
-        let FEE_MARKETPLACE = {
-            'Shopee': 0,     
-            'TikTok': 0,     
-            'Tokopedia': 0,  
-            'Lainnya': 0     
-        };
-
-        // State Global
-        let cachedItems = [];
-
-        // ==========================================
-        // UI FUNCTIONS
-        // ==========================================
-        function switchTab(tabId, btnElement) {
-            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-
-            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('btn-active'));
-            btnElement.classList.add('btn-active');
-
-            const today = new Date().toISOString().split('T')[0];
-            if(tabId === 'stokMasuk') document.getElementById('inTanggal').value = today;
-            if(tabId === 'barangKeluar') document.getElementById('outTanggal').value = today;
-
-            if(tabId === 'dashboard') loadDashboard();
-            if(tabId === 'pendapatan') loadRevenue();
-        }
-
-        function showLoading(show) {
-            const el = document.getElementById('loading');
-            show ? el.classList.remove('hidden') : el.classList.add('hidden');
-        }
-
-        function showToast(message, isSuccess = true) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.className = `fixed top-5 right-5 z-50 p-4 rounded-lg shadow-lg text-white font-medium transform transition-all duration-300 ${isSuccess ? 'bg-green-600' : 'bg-red-600'}`;
-            
-            toast.classList.remove('translate-x-full', 'opacity-0');
-            
-            setTimeout(() => {
-                toast.classList.add('translate-x-full', 'opacity-0');
-            }, 3000);
-        }
-
-        function formatRupiah(angka) {
-            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka || 0);
-        }
-
-        // ==========================================
-        // KALKULASI OTOMATIS BARANG KELUAR
-        // ==========================================
-        function calculateProfit() {
-            const mp = document.getElementById('outMarketplace').value;
-            const kode = document.getElementById('outKode').value;
-            const qtyStr = document.getElementById('outJumlah').value;
-            const qty = parseInt(qtyStr) || 0;
-            
-            const panel = document.getElementById('profitPanel');
-
-            if (!mp || !kode) {
-                panel.classList.add('hidden');
-                return;
-            }
-
-            const item = cachedItems.find(i => i.kode === kode);
-            if (!item) return;
-
-            const hargaJualAwal = parseFloat(item.harga) || 0;
-            const persentaseFee = FEE_MARKETPLACE[mp] || 0;
-            
-            // Hitung potongan (Harga x Persen Admin)
-            const nominalPotongan = (hargaJualAwal * persentaseFee) / 100;
-            const hargaBersihPerItem = hargaJualAwal - nominalPotongan;
-            const totalKeuntunganBersih = hargaBersihPerItem * qty;
-
-            // Tampilkan di UI
-            document.getElementById('detHargaJual').innerText = formatRupiah(hargaJualAwal);
-            document.getElementById('lblMpFee').innerText = `(${persentaseFee}%)`;
-            document.getElementById('detPotongan').innerText = "- " + formatRupiah(nominalPotongan);
-            document.getElementById('detHargaBersih').innerText = formatRupiah(hargaBersihPerItem);
-            document.getElementById('detQty').innerText = qty;
-            document.getElementById('detTotalKeuntungan').innerText = formatRupiah(totalKeuntunganBersih);
-
-            panel.classList.remove('hidden');
-        }
-
-        // ==========================================
-        // API FETCH FUNCTIONS
-        // ==========================================
-        
-        async function fetchFees() {
-            if(!SCRIPT_URL) return;
-            try {
-                // Menghapus { redirect: 'follow' } eksplisit karena sering bentrok dengan iframe/blob sandbox
-                const response = await fetch(`${SCRIPT_URL}?action=getFees`);
-                const textResponse = await response.text(); 
-                
-                try {
-                    const result = JSON.parse(textResponse);
-                    if(result && result.fees) {
-                        FEE_MARKETPLACE = result.fees;
-                    }
-                } catch (parseError) {
-                    console.warn('Peringatan: Google Script tidak mereturn JSON valid. Memakai fee default 0%. Pastikan Anda sudah Deploy ke "Versi Baru". Respons:', textResponse);
-                }
-            } catch (error) {
-                console.error('Gagal menghubungi database Google Script (getFees):', error);
-            }
-        }
-
-        async function fetchItems() {
-            if(!SCRIPT_URL) return;
-            
-            showLoading(true);
-            try {
-                const response = await fetch(`${SCRIPT_URL}?action=getItems`);
-                const textResponse = await response.text(); 
-                
-                try {
-                    const items = JSON.parse(textResponse);
-                    cachedItems = items;
-                    
-                    const tbody = document.getElementById('itemsTbody');
-                    tbody.innerHTML = '';
-                    
-                    const selectIn = document.getElementById('inKode');
-                    const selectOut = document.getElementById('outKode');
-                    selectIn.innerHTML = '<option value="">-- Pilih Kode --</option>';
-                    selectOut.innerHTML = '<option value="">-- Pilih Kode --</option>';
-
-                    if(items.length === 0) {
-                        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">Belum ada barang terdaftar.</td></tr>`;
-                    } else {
-                        items.forEach(item => {
-                            tbody.innerHTML += `
-                                <tr class="hover:bg-gray-50">
-                                    <td class="p-3 font-medium text-navy-700">${item.kode}</td>
-                                    <td class="p-3">${item.nama}</td>
-                                    <td class="p-3">${formatRupiah(item.hpp)}</td>
-                                    <td class="p-3">${formatRupiah(item.harga)}</td>
-                                    <td class="p-3 font-bold ${item.stok <= 5 ? 'text-red-500' : 'text-green-600'}">${item.stok}</td>
-                                </tr>
-                            `;
-                            selectIn.innerHTML += `<option value="${item.kode}">${item.kode} - ${item.nama}</option>`;
-                            selectOut.innerHTML += `<option value="${item.kode}">${item.kode} - ${item.nama}</option>`;
-                        });
-                    }
-                } catch (parseErr) {
-                    console.error("Error parse getItems. Respons dari server:", textResponse);
-                    showToast('Gagal membaca data Master Barang! Pastikan setelan akses "Siapa saja"', false);
-                }
-            } catch (error) {
-                console.error("Error fetchItems:", error);
-                if (error.message.includes('Failed to fetch')) {
-                    showToast('Koneksi Ditolak! Pastikan Script dideploy ke "Siapa saja" (Anyone)', false);
-                } else {
-                    showToast('Gagal terhubung ke server', false);
-                }
-            }
-            showLoading(false);
-        }
-
-        async function loadDashboard() {
-            showLoading(true);
-            const start = document.getElementById('dashStart').value;
-            const end = document.getElementById('dashEnd').value;
-            
-            let url = `${SCRIPT_URL}?action=getDashboard`;
-            if(start) url += `&startDate=${start}`;
-            if(end) url += `&endDate=${end}`;
-
-            try {
-                const response = await fetch(url);
-                const textResponse = await response.text();
-                
-                try {
-                    const data = JSON.parse(textResponse);
-                    
-                    document.getElementById('dashTotalMasuk').innerText = data.totalMasuk;
-                    document.getElementById('dashTotalKeluar').innerText = data.totalKeluar;
-
-                    const tbody = document.getElementById('topItemsTbody');
-                    tbody.innerHTML = '';
-                    if(data.topItems.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-center text-gray-500">Tidak ada transaksi.</td></tr>';
-                    } else {
-                        data.topItems.forEach((item, index) => {
-                            tbody.innerHTML += `
-                                <tr class="hover:bg-gray-50">
-                                    <td class="p-3 text-center font-bold text-gray-500">#${index + 1}</td>
-                                    <td class="p-3 text-navy-700 font-medium">${item.kode}</td>
-                                    <td class="p-3">${item.nama}</td>
-                                    <td class="p-3 font-bold text-red-600">${item.qty} Unit</td>
-                                </tr>
-                            `;
-                        });
-                    }
-                } catch (parseErr) {
-                    console.error("Error parse Dashboard. Respons server:", textResponse);
-                    showToast('Gagal membaca data Dashboard (Cek Konsol)', false);
-                }
-            } catch (error) {
-                console.error("Error loadDashboard:", error);
-                if (error.message.includes('Failed to fetch')) {
-                    showToast('Koneksi Ditolak (CORS)! Cek setelan "Siapa saja" di Apps Script.', false);
-                } else {
-                    showToast('Gagal terhubung ke Dashboard.', false);
-                }
-            }
-            showLoading(false);
-        }
-
-        async function loadRevenue() {
-            showLoading(true);
-            try {
-                const response = await fetch(`${SCRIPT_URL}?action=getRevenue`);
-                const textResponse = await response.text();
-                
-                try {
-                    const data = JSON.parse(textResponse);
-                    
-                    const tbody = document.getElementById('revenueTbody');
-                    tbody.innerHTML = '';
-
-                    // Variabel untuk menampung pendapatan per-marketplace
-                    let sumShopee = 0, sumTiktok = 0, sumTokopedia = 0, sumLainnya = 0, sumGrand = 0;
-
-                    if(data.list.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">Belum ada transaksi pendapatan.</td></tr>';
-                    } else {
-                        data.list.reverse().forEach(row => {
-                            const mp = row.marketplace || 'Lainnya'; 
-                            
-                            const barisTotal = parseFloat(row.total) || 0; 
-                            const barisHargaSatuan = parseFloat(row.harga) || 0;
-
-                            sumGrand += barisTotal;
-                            if(mp === 'Shopee') sumShopee += barisTotal;
-                            else if(mp === 'TikTok') sumTiktok += barisTotal;
-                            else if(mp === 'Tokopedia') sumTokopedia += barisTotal;
-                            else sumLainnya += barisTotal;
-
-                            let badgeClass = 'bg-gray-200 text-gray-700';
-                            if(mp === 'Shopee') badgeClass = 'bg-orange-100 text-orange-700';
-                            if(mp === 'TikTok') badgeClass = 'bg-gray-800 text-white';
-                            if(mp === 'Tokopedia') badgeClass = 'bg-green-100 text-green-700';
-
-                            tbody.innerHTML += `
-                                <tr class="hover:bg-gray-50">
-                                    <td class="p-3 text-gray-600">${row.tanggal}</td>
-                                    <td class="p-3"><span class="px-2 py-1 rounded text-xs font-medium ${badgeClass}">${mp}</span></td>
-                                    <td class="p-3 font-medium">${row.kode}<br><span class="text-xs text-gray-500 font-normal">${row.nama}</span></td>
-                                    <td class="p-3 text-center font-bold text-red-600">${row.jumlah}</td>
-                                    <td class="p-3 text-right text-gray-600">${formatRupiah(barisHargaSatuan)}</td>
-                                    <td class="p-3 text-right font-bold text-navy-800">${formatRupiah(barisTotal)}</td>
-                                </tr>
-                            `;
-                        });
-                    }
-
-                    document.getElementById('grandTotalText').innerText = formatRupiah(sumGrand);
-                    document.getElementById('revShopee').innerText = formatRupiah(sumShopee);
-                    document.getElementById('revTiktok').innerText = formatRupiah(sumTiktok);
-                    document.getElementById('revTokopedia').innerText = formatRupiah(sumTokopedia);
-                    document.getElementById('revLainnya').innerText = formatRupiah(sumLainnya);
-                } catch (parseErr) {
-                    console.error("Error parse Revenue. Respons server:", textResponse);
-                    showToast('Gagal membaca Laporan Pendapatan', false);
-                }
-
-            } catch (error) {
-                console.error("Error loadRevenue:", error);
-                showToast('Gagal terhubung ke Laporan', false);
-            }
-            showLoading(false);
-        }
-
-        // ==========================================
-        // SUBMIT FORM FUNCTIONS (POST)
-        // ==========================================
-
-        async function postData(payload) {
-            showLoading(true);
-            try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8', 
-                    },
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-                showLoading(false);
-                
-                if(result.status === 'success') {
-                    showToast(result.message, true);
-                    return true;
-                } else {
-                    showToast(result.message || 'Terjadi kesalahan!', false);
-                    return false;
-                }
-            } catch (error) {
-                showLoading(false);
-                showToast('Data dikirim, silahkan muat ulang halaman jika tidak update (keterbatasan CORS).', true);
-                return true; 
-            }
-        }
-
-        async function submitBarang(e) {
-            e.preventDefault();
-            const payload = {
-                action: 'addItem',
-                kode: document.getElementById('brgKode').value,
-                nama: document.getElementById('brgNama').value,
-                hpp: document.getElementById('brgHPP').value,
-                harga: document.getElementById('brgHarga').value
-            };
-            const success = await postData(payload);
-            if(success) {
-                document.getElementById('formBarang').reset();
-                fetchItems(); 
-            }
-        }
-
-        async function submitMasuk(e) {
-            e.preventDefault();
-            const payload = {
-                action: 'addMasuk',
-                tanggal: document.getElementById('inTanggal').value,
-                kode: document.getElementById('inKode').value,
-                nama: document.getElementById('inNama').value,
-                jumlah: document.getElementById('inJumlah').value
-            };
-            const success = await postData(payload);
-            if(success) {
-                document.getElementById('inJumlah').value = '';
-                fetchItems(); 
-            }
-        }
-
-        async function submitKeluar(e) {
-            e.preventDefault();
-            
-            // Kalkulasi ulang untuk keamanan data
-            const mp = document.getElementById('outMarketplace').value;
-            const kode = document.getElementById('outKode').value;
-            const qty = parseInt(document.getElementById('outJumlah').value);
-            const item = cachedItems.find(i => i.kode === kode);
-            
-            const hargaJualAwal = item ? parseFloat(item.harga) : 0;
-            const persentaseFee = FEE_MARKETPLACE[mp] || 0;
-            const potonganAdmin = (hargaJualAwal * persentaseFee) / 100;
-            const hargaBersih = hargaJualAwal - potonganAdmin;
-            const totalKeuntungan = hargaBersih * qty;
-
-            const payload = {
-                action: 'addKeluar',
-                tanggal: document.getElementById('outTanggal').value,
-                kode: kode,
-                nama: document.getElementById('outNama').value,
-                jumlah: qty,
-                marketplace: mp,
-                potonganAdmin: potonganAdmin, 
-                hargaJual: hargaBersih, // kita kirim harga yang sudah dipotong
-                totalPendapatan: totalKeuntungan 
-            };
-            
-            const success = await postData(payload);
-            if(success) {
-                document.getElementById('outJumlah').value = '';
-                document.getElementById('outMarketplace').value = '';
-                document.getElementById('profitPanel').classList.add('hidden');
-                fetchItems(); 
-            }
-        }
-
-        function autoFillNama(selectId, inputId) {
-            const kode = document.getElementById(selectId).value;
-            const item = cachedItems.find(i => i.kode === kode);
-            document.getElementById(inputId).value = item ? item.nama : '';
-        }
-
-        // Init App On Load
-        window.onload = () => {
-            fetchFees();
-            fetchItems();
-            loadDashboard();
-            
+            // Set tanggal default untuk dashboard
             const date = new Date();
             const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split('T')[0];
             const today = date.toISOString().split('T')[0];
