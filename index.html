@@ -46,6 +46,12 @@
     <!-- Notification Toast -->
     <div id="toast" class="fixed top-5 right-5 z-50 p-4 rounded-lg shadow-lg text-white font-medium transform transition-all duration-300 translate-x-full opacity-0"></div>
 
+    <!-- Modal Image Zoom -->
+    <div id="imageModal" class="fixed inset-0 bg-black/90 z-[60] hidden flex flex-col justify-center items-center p-4 cursor-pointer transition-opacity" onclick="closeModal()">
+        <img id="modalImage" class="max-w-full max-h-full object-contain rounded-md shadow-2xl scale-95 transition-transform duration-300" src="" alt="Zoomed Image">
+        <p class="absolute bottom-10 text-white text-sm bg-black/50 px-4 py-2 rounded-full font-medium">Klik di mana saja untuk menutup</p>
+    </div>
+
     <div class="flex flex-col md:flex-row min-h-screen">
         
         <!-- Sidebar Menu -->
@@ -80,25 +86,16 @@
         <!-- Main Content -->
         <main class="flex-1 p-4 md:p-8 overflow-y-auto">
 
-            <!-- PESAN ERROR KONEKSI (Otomatis muncul jika gagal terhubung) -->
+            <!-- PESAN ERROR KONEKSI -->
             <div id="corsErrorBanner" class="hidden bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg shadow-sm">
                 <div class="flex items-start">
                     <div class="flex-shrink-0">
                         <span class="text-red-500 text-xl">⚠️</span>
                     </div>
                     <div class="ml-3">
-                        <h3 class="text-sm font-bold text-red-800">Koneksi ke Database Google Script Diblokir! (Failed to fetch)</h3>
+                        <h3 class="text-sm font-bold text-red-800">Koneksi ke Database Google Script Diblokir!</h3>
                         <div class="mt-2 text-sm text-red-700">
-                            <p>Sistem keamanan web mendeteksi bahwa pengaturan akses Google Apps Script Anda belum dibuka untuk umum. Silakan ikuti perbaikan ini:</p>
-                            <ul class="list-disc ml-5 mt-2 space-y-1 font-medium">
-                                <li>Buka editor Google Apps Script Anda.</li>
-                                <li>Klik tombol biru <strong>Terapkan (Deploy)</strong> > <strong>Kelola deployment</strong>.</li>
-                                <li>Klik ikon <strong>Pensil (Edit)</strong>.</li>
-                                <li>Pastikan <strong>Jalankan sebagai</strong> dipilih ke: <span class="bg-red-200 px-1 rounded">Saya (Email Anda)</span>.</li>
-                                <li><span class="text-red-900 font-bold">PENTING:</span> Pastikan <strong>Siapa yang memiliki akses</strong> dipilih ke: <span class="bg-red-200 px-1 rounded">Siapa saja (Anyone)</span>.</li>
-                                <li>Ubah Versi ke <strong>Versi baru (New version)</strong>.</li>
-                                <li>Klik <strong>Terapkan</strong> lalu muat ulang halaman web ini.</li>
-                            </ul>
+                            <p>Sistem keamanan web mendeteksi bahwa pengaturan akses Google Apps Script Anda belum dibuka untuk umum.</p>
                         </div>
                     </div>
                 </div>
@@ -144,7 +141,7 @@
                                 <tr>
                                     <th class="p-3">Peringkat</th>
                                     <th class="p-3">Kode Barang</th>
-                                    <th class="p-3">Nama Barang</th>
+                                    <th class="p-3">Warna</th>
                                     <th class="p-3">Total Keluar (Qty)</th>
                                 </tr>
                             </thead>
@@ -169,13 +166,18 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Kode Barang (Pilih / Ketik Manual)</label>
                             <!-- Menggunakan Input dengan Datalist untuk pencarian & input manual -->
-                            <input list="inKodeList" id="inKode" oninput="autoFillHPP('inKode', 'inHPP')" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none bg-white" placeholder="Ketik atau cari kode..." autocomplete="off">
+                            <input list="inKodeList" id="inKode" oninput="handleKodeChange('masuk')" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none bg-white" placeholder="Ketik atau cari kode..." autocomplete="off">
                             <datalist id="inKodeList">
                                 <!-- Options diisi dari JS -->
                             </datalist>
                         </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Warna</label>
+                            <input type="text" id="inWarna" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none" placeholder="Otomatis atau ketik warna...">
+                        </div>
 
-                        <!-- INPUT UPLOAD FOTO BARANG (PENGGANTI NAMA BARANG) -->
+                        <!-- INPUT UPLOAD FOTO BARANG -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Upload Foto Barang</label>
                             <div class="mt-1 flex items-center justify-center w-full">
@@ -193,15 +195,22 @@
                             </div>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">HPP (Modal)</label>
-                            <input type="number" id="inHPP" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none" placeholder="Rp">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">HPP (Modal)</label>
+                                <input type="number" id="inHPP" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none" placeholder="Rp">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Harga Jual</label>
+                                <input type="number" id="inHarga" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none" placeholder="Rp">
+                            </div>
                         </div>
+
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Masuk (Qty)</label>
                             <input type="number" id="inJumlah" min="1" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none">
                         </div>
-                        <p class="text-xs text-gray-500">* Jika mengupload foto, foto otomatis tersimpan/diperbarui di Daftar Barang Master.</p>
+                        <p class="text-xs text-gray-500">* Jika mengupload foto, foto dan data warna otomatis tersimpan ke Daftar Barang Master.</p>
                         <button type="submit" class="w-full bg-green-600 text-white font-medium py-2.5 rounded-md hover:bg-green-700 transition shadow-sm">Simpan Stok Masuk</button>
                     </form>
                 </div>
@@ -230,15 +239,18 @@
                             </div>
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Kode Barang</label>
-                                <select id="outKode" onchange="autoFillNama('outKode', 'outNama'); calculateProfit()" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none bg-white">
+                                <select id="outKode" onchange="handleKodeChange('keluar')" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none bg-white">
                                     <option value="">-- Pilih Kode --</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Barang (Otomatis)</label>
-                            <input type="text" id="outNama" readonly class="w-full bg-gray-100 border border-gray-300 p-2.5 rounded-md text-gray-600 cursor-not-allowed">
+                        <!-- FOTO OTOMATIS (Pengganti Nama Barang) -->
+                        <div id="outFotoPreviewContainer" class="hidden mt-2 mb-2 flex justify-center">
+                            <div class="p-2 border rounded-lg bg-gray-50 shadow-sm inline-block">
+                                <img id="outFotoPreview" class="w-32 h-32 object-cover rounded shadow-sm bg-white" src="" alt="Preview Barang">
+                                <p id="outWarnaLabel" class="text-center text-sm font-bold text-navy-800 mt-2">-</p>
+                            </div>
                         </div>
                         
                         <div>
@@ -246,7 +258,7 @@
                             <input type="number" id="outJumlah" min="1" oninput="calculateProfit()" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none">
                         </div>
 
-                        <!-- PANEL RINCIAN KEUNTUNGAN (Otomatis Muncul) -->
+                        <!-- PANEL RINCIAN KEUNTUNGAN -->
                         <div id="profitPanel" class="hidden bg-blue-50 border border-blue-200 p-4 rounded-lg mt-4">
                             <h4 class="text-sm font-bold text-navy-800 mb-2 border-b border-blue-200 pb-1">Estimasi Keuntungan Bersih</h4>
                             <div class="grid grid-cols-2 gap-2 text-sm">
@@ -264,7 +276,6 @@
                             </div>
                         </div>
 
-                        <p class="text-xs text-gray-500">* Total Keuntungan akan dicatat ke laporan pendapatan berdasarkan Harga Bersih × Jumlah Keluar.</p>
                         <button type="submit" class="w-full bg-red-600 text-white font-medium py-2.5 rounded-md hover:bg-red-700 transition shadow-sm">Catat Barang Keluar</button>
                     </form>
                 </div>
@@ -287,7 +298,7 @@
                                 <tr>
                                     <th class="p-3 w-16 text-center">Foto</th>
                                     <th class="p-3">Kode Barang</th>
-                                    <th class="p-3">Nama Barang</th>
+                                    <th class="p-3">Warna</th>
                                     <th class="p-3">HPP (Rp)</th>
                                     <th class="p-3">Harga Jual (Rp)</th>
                                     <th class="p-3">Stok Saat Ini</th>
@@ -379,10 +390,8 @@
         // ==========================================
         // KONFIGURASI GLOBAL
         // ==========================================
-        // URL diambil dari localStorage agar tersimpan di browser
         let SCRIPT_URL = localStorage.getItem('fshn_script_url') || "";
 
-        // --- PENGATURAN POTONGAN ADMIN (PERSEN %) ---
         let FEE_MARKETPLACE = {
             'Shopee': 0,     
             'TikTok': 0,     
@@ -390,12 +399,11 @@
             'Lainnya': 0     
         };
 
-        // State Global
         let cachedItems = [];
-        let currentBase64Foto = ""; // Menampung data foto yang dipilih
+        let currentBase64Foto = ""; 
 
         // ==========================================
-        // UI FUNCTIONS
+        // UI FUNCTIONS & MODALS
         // ==========================================
         function switchTab(tabId, btnElement) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -408,13 +416,9 @@
             if(tabId === 'stokMasuk') document.getElementById('inTanggal').value = today;
             if(tabId === 'barangKeluar') document.getElementById('outTanggal').value = today;
 
-            // Tutup pesan error cors setiap kali ganti tab agar rapi
             document.getElementById('corsErrorBanner').classList.add('hidden');
 
-            // Jika URL Script belum ada, batalkan fetch data
-            if(!SCRIPT_URL && tabId !== 'pengaturan') {
-                return;
-            }
+            if(!SCRIPT_URL && tabId !== 'pengaturan') return;
 
             if(tabId === 'dashboard') loadDashboard();
             if(tabId === 'pendapatan') loadRevenue();
@@ -432,10 +436,7 @@
             toast.className = `fixed top-5 right-5 z-50 p-4 rounded-lg shadow-lg text-white font-medium transform transition-all duration-300 ${isSuccess ? 'bg-green-600' : 'bg-red-600'}`;
             
             toast.classList.remove('translate-x-full', 'opacity-0');
-            
-            setTimeout(() => {
-                toast.classList.add('translate-x-full', 'opacity-0');
-            }, 3000);
+            setTimeout(() => { toast.classList.add('translate-x-full', 'opacity-0'); }, 3000);
         }
 
         function showCorsError() {
@@ -444,6 +445,23 @@
 
         function formatRupiah(angka) {
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(angka || 0);
+        }
+
+        // Logic Modal Zoom Image
+        function openModal(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modalImg.src = imageSrc;
+            modal.classList.remove('hidden');
+            setTimeout(() => { modalImg.classList.remove('scale-95'); modalImg.classList.add('scale-100'); }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modalImg.classList.remove('scale-100');
+            modalImg.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 150);
         }
 
         // ==========================================
@@ -465,7 +483,6 @@
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
-                    // Kompres gambar dengan Canvas agar Spreadsheet tidak error kepenuhan (max 400px)
                     const canvas = document.createElement('canvas');
                     const MAX_SIZE = 400;
                     let width = img.width;
@@ -482,9 +499,7 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, width, height);
 
-                    // Konversi ke base64 dengan kualitas 60% untuk menghemat string limit
                     currentBase64Foto = canvas.toDataURL('image/jpeg', 0.6); 
-
                     preview.src = currentBase64Foto;
                     preview.classList.remove('hidden');
                     placeholder.classList.add('hidden');
@@ -499,41 +514,64 @@
         // ==========================================
         function saveSettings() {
             let inputUrl = document.getElementById('settingUrlInput').value.trim();
-            
             if (!inputUrl.startsWith('https://script.google.com/')) {
                 showToast('Format URL salah! Harus berupa link Google Script.', false);
                 return;
             }
+            if (inputUrl.endsWith('/')) inputUrl = inputUrl.slice(0, -1);
 
-            // Bersihkan slash di akhir url jika user tidak sengaja menambahkan
-            if (inputUrl.endsWith('/')) {
-                inputUrl = inputUrl.slice(0, -1);
-            }
-
-            // Simpan ke variabel dan local storage
             SCRIPT_URL = inputUrl;
             localStorage.setItem('fshn_script_url', SCRIPT_URL);
-            
             showToast('URL berhasil disimpan! Mencoba terhubung...', true);
             
-            // Panggil API di background
             fetchFees();
             fetchItems();
-            
-            // Pindah ke dashboard 
-            const btnDashboard = document.getElementById('btnDashboard');
-            switchTab('dashboard', btnDashboard);
+            switchTab('dashboard', document.getElementById('btnDashboard'));
         }
 
         // ==========================================
-        // KALKULASI OTOMATIS BARANG KELUAR
+        // DATA AUTOFILL (Masuk & Keluar)
         // ==========================================
+        function handleKodeChange(type) {
+            if (type === 'masuk') {
+                const kode = document.getElementById('inKode').value;
+                const item = cachedItems.find(i => i.kode === kode);
+                
+                if (item) {
+                    if(document.getElementById('inWarna')) document.getElementById('inWarna').value = item.warna || '';
+                    if(document.getElementById('inHPP')) document.getElementById('inHPP').value = item.hpp || '';
+                    if(document.getElementById('inHarga')) document.getElementById('inHarga').value = item.harga || '';
+                }
+            } else if (type === 'keluar') {
+                const kode = document.getElementById('outKode').value;
+                const item = cachedItems.find(i => i.kode === kode);
+                const imgPreviewContainer = document.getElementById('outFotoPreviewContainer');
+                const imgPreview = document.getElementById('outFotoPreview');
+                const warnaLabel = document.getElementById('outWarnaLabel');
+                
+                if (item && item.foto) {
+                    imgPreview.src = item.foto;
+                    imgPreviewContainer.classList.remove('hidden');
+                } else {
+                    imgPreview.src = '';
+                    imgPreviewContainer.classList.add('hidden');
+                }
+
+                if(item && item.warna) {
+                    warnaLabel.innerText = item.warna;
+                } else {
+                    warnaLabel.innerText = "Tanpa Warna";
+                }
+
+                calculateProfit();
+            }
+        }
+
         function calculateProfit() {
             const mp = document.getElementById('outMarketplace').value;
             const kode = document.getElementById('outKode').value;
             const qtyStr = document.getElementById('outJumlah').value;
             const qty = parseInt(qtyStr) || 0;
-            
             const panel = document.getElementById('profitPanel');
 
             if (!mp || !kode) {
@@ -564,18 +602,14 @@
         // ==========================================
         // API FETCH FUNCTIONS
         // ==========================================
-        
         async function fetchFees() {
             if(!SCRIPT_URL) return;
             try {
                 const response = await fetch(`${SCRIPT_URL}?action=getFees`, { method: 'GET', mode: 'cors' });
                 const textResponse = await response.text(); 
-                
                 try {
                     const result = JSON.parse(textResponse);
-                    if(result && result.fees) {
-                        FEE_MARKETPLACE = result.fees;
-                    }
+                    if(result && result.fees) FEE_MARKETPLACE = result.fees;
                 } catch (parseError) {
                     console.warn('Peringatan: Google Script tidak mereturn JSON valid.');
                 }
@@ -597,11 +631,10 @@
                     cachedItems = items;
                     
                     const tbody = document.getElementById('itemsTbody');
-                    if(tbody) tbody.innerHTML = '';
-                    
                     const datalistIn = document.getElementById('inKodeList');
                     const selectOut = document.getElementById('outKode');
                     
+                    if(tbody) tbody.innerHTML = '';
                     if(datalistIn) datalistIn.innerHTML = '';
                     if(selectOut) selectOut.innerHTML = '<option value="">-- Pilih Kode --</option>';
 
@@ -609,34 +642,32 @@
                         if(tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">Belum ada barang terdaftar.</td></tr>`;
                     } else {
                         items.forEach(item => {
-                            // Cek jika ada foto, jika tidak ada pakai placeholder kosong
+                            // Fungsi onClick pembesar gambar ditaruh disini
                             const imgHtml = item.foto 
-                                ? `<img src="${item.foto}" class="w-12 h-12 object-cover rounded-md border shadow-sm cursor-pointer hover:scale-150 transition-transform origin-left">` 
-                                : `<div class="w-12 h-12 bg-gray-200 rounded-md border flex items-center justify-center text-xs text-gray-400">No Pic</div>`;
+                                ? `<img src="${item.foto}" onclick="openModal('${item.foto}')" class="w-12 h-12 mx-auto object-cover rounded-md border shadow-sm cursor-pointer hover:opacity-75 transition-opacity">` 
+                                : `<div class="w-12 h-12 bg-gray-200 mx-auto rounded-md border flex items-center justify-center text-xs text-gray-400">No Pic</div>`;
 
                             if(tbody) tbody.innerHTML += `
                                 <tr class="hover:bg-gray-50">
                                     <td class="p-3 text-center">${imgHtml}</td>
                                     <td class="p-3 font-medium text-navy-700">${item.kode}</td>
-                                    <td class="p-3">${item.nama || "-"}</td>
+                                    <td class="p-3">${item.warna || "-"}</td>
                                     <td class="p-3">${formatRupiah(item.hpp)}</td>
                                     <td class="p-3">${formatRupiah(item.harga)}</td>
                                     <td class="p-3 font-bold ${item.stok <= 5 ? 'text-red-500' : 'text-green-600'}">${item.stok}</td>
                                 </tr>
                             `;
                             
-                            // Tambahkan nama untuk dropdown/datalist jika tidak kosong
-                            const displayName = item.nama ? item.nama : item.kode;
-                            if(datalistIn) datalistIn.innerHTML += `<option value="${item.kode}">${displayName}</option>`;
-                            if(selectOut) selectOut.innerHTML += `<option value="${item.kode}">${item.kode} - ${displayName}</option>`;
+                            // Tampilkan Info Warna di Opsi Dropdown jika ada
+                            const infoBarang = item.warna ? `${item.kode} (${item.warna})` : item.kode;
+                            if(datalistIn) datalistIn.innerHTML += `<option value="${item.kode}">${infoBarang}</option>`;
+                            if(selectOut) selectOut.innerHTML += `<option value="${item.kode}">${infoBarang}</option>`;
                         });
                     }
                 } catch (parseErr) {
-                    console.error("Error parse getItems:", textResponse);
                     showToast('Gagal membaca data Master Barang!', false);
                 }
             } catch (error) {
-                console.error("Error fetchItems:", error);
                 if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
                     showCorsError();
                 } else {
@@ -677,23 +708,17 @@
                                 <tr class="hover:bg-gray-50">
                                     <td class="p-3 text-center font-bold text-gray-500">#${index + 1}</td>
                                     <td class="p-3 text-navy-700 font-medium">${item.kode}</td>
-                                    <td class="p-3">${item.nama || "-"}</td>
+                                    <td class="p-3">${item.warna || "-"}</td>
                                     <td class="p-3 font-bold text-red-600">${item.qty} Unit</td>
                                 </tr>
                             `;
                         });
                     }
                 } catch (parseErr) {
-                    console.error("Error parse Dashboard:", textResponse);
                     showToast('Gagal membaca data Dashboard', false);
                 }
             } catch (error) {
-                console.error("Error loadDashboard:", error);
-                if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
-                    showCorsError();
-                } else {
-                    showToast('Gagal terhubung ke Dashboard.', false);
-                }
+                if (error.message.includes('Failed to fetch') || error.name === 'TypeError') showCorsError();
             }
             showLoading(false);
         }
@@ -708,7 +733,6 @@
                 
                 try {
                     const data = JSON.parse(textResponse);
-                    
                     const tbody = document.getElementById('revenueTbody');
                     tbody.innerHTML = '';
 
@@ -737,7 +761,7 @@
                                 <tr class="hover:bg-gray-50">
                                     <td class="p-3 text-gray-600">${row.tanggal}</td>
                                     <td class="p-3"><span class="px-2 py-1 rounded text-xs font-medium ${badgeClass}">${mp}</span></td>
-                                    <td class="p-3 font-medium">${row.kode}<br><span class="text-xs text-gray-500 font-normal">${row.nama || "-"}</span></td>
+                                    <td class="p-3 font-medium">${row.kode}<br><span class="text-xs text-gray-500 font-normal">${row.warna || "-"}</span></td>
                                     <td class="p-3 text-center font-bold text-red-600">${row.jumlah}</td>
                                     <td class="p-3 text-right text-gray-600">${formatRupiah(barisHargaSatuan)}</td>
                                     <td class="p-3 text-right font-bold text-navy-800">${formatRupiah(barisTotal)}</td>
@@ -752,17 +776,10 @@
                     document.getElementById('revTokopedia').innerText = formatRupiah(sumTokopedia);
                     document.getElementById('revLainnya').innerText = formatRupiah(sumLainnya);
                 } catch (parseErr) {
-                    console.error("Error parse Revenue:", textResponse);
                     showToast('Gagal membaca Laporan Pendapatan', false);
                 }
-
             } catch (error) {
-                console.error("Error loadRevenue:", error);
-                if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
-                    showCorsError();
-                } else {
-                    showToast('Gagal terhubung ke Laporan', false);
-                }
+                if (error.message.includes('Failed to fetch') || error.name === 'TypeError') showCorsError();
             }
             showLoading(false);
         }
@@ -770,7 +787,6 @@
         // ==========================================
         // SUBMIT FORM FUNCTIONS (POST)
         // ==========================================
-
         async function postData(payload) {
             if(!SCRIPT_URL) {
                 showToast('URL Google Script belum diatur!', false);
@@ -811,19 +827,20 @@
                 action: 'addMasuk',
                 tanggal: document.getElementById('inTanggal').value,
                 kode: document.getElementById('inKode').value,
-                // Nama dihilangkan sesuai request
+                warna: document.getElementById('inWarna').value, // Mengirim Warna
                 jumlah: document.getElementById('inJumlah').value,
                 hpp: document.getElementById('inHPP').value,
+                harga: document.getElementById('inHarga').value, // Mengirim Harga Jual
                 foto: currentBase64Foto // Mengirim data Base64 foto
             };
             const success = await postData(payload);
             if(success) {
-                // Reset input manual
                 document.getElementById('inJumlah').value = '';
                 document.getElementById('inKode').value = '';
+                document.getElementById('inWarna').value = '';
                 document.getElementById('inHPP').value = '';
+                document.getElementById('inHarga').value = '';
                 
-                // Reset foto
                 currentBase64Foto = "";
                 document.getElementById('inFoto').value = "";
                 document.getElementById('inFotoPreview').classList.add('hidden');
@@ -835,13 +852,13 @@
 
         async function submitKeluar(e) {
             e.preventDefault();
-            
             const mp = document.getElementById('outMarketplace').value;
             const kode = document.getElementById('outKode').value;
             const qty = parseInt(document.getElementById('outJumlah').value);
             const item = cachedItems.find(i => i.kode === kode);
             
             const hargaJualAwal = item ? parseFloat(item.harga) : 0;
+            const warnaBarang = item ? item.warna : "";
             const persentaseFee = FEE_MARKETPLACE[mp] || 0;
             const potonganAdmin = (hargaJualAwal * persentaseFee) / 100;
             const hargaBersih = hargaJualAwal - potonganAdmin;
@@ -851,7 +868,7 @@
                 action: 'addKeluar',
                 tanggal: document.getElementById('outTanggal').value,
                 kode: kode,
-                nama: document.getElementById('outNama').value,
+                warna: warnaBarang, // Tetap mengirimkan warna agar tercatat di sheet Keluar
                 jumlah: qty,
                 marketplace: mp,
                 potonganAdmin: potonganAdmin, 
@@ -863,28 +880,10 @@
             if(success) {
                 document.getElementById('outJumlah').value = '';
                 document.getElementById('outKode').value = '';
-                document.getElementById('outNama').value = '';
                 document.getElementById('outMarketplace').value = '';
                 document.getElementById('profitPanel').classList.add('hidden');
+                document.getElementById('outFotoPreviewContainer').classList.add('hidden');
                 fetchItems(); 
-            }
-        }
-
-        // Fungsi Auto Fill Klasik (Hanya untuk Barang Keluar)
-        function autoFillNama(selectId, inputId) {
-            const kode = document.getElementById(selectId).value;
-            const item = cachedItems.find(i => i.kode === kode);
-            document.getElementById(inputId).value = item ? item.nama : '';
-        }
-
-        // Fungsi Auto Fill untuk Datalist (Stok Masuk - Hanya isi HPP)
-        function autoFillHPP(inputId, hppId) {
-            const kode = document.getElementById(inputId).value;
-            const item = cachedItems.find(i => i.kode === kode);
-            const hppInput = document.getElementById(hppId);
-            
-            if (item && hppInput) {
-                hppInput.value = item.hpp;
             }
         }
 
@@ -906,7 +905,6 @@
 
         window.onload = () => {
             initApp();
-            
             const date = new Date();
             const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split('T')[0];
             const today = date.toISOString().split('T')[0];
