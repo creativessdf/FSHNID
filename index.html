@@ -169,7 +169,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Kode Barang (Pilih / Ketik Manual)</label>
                             <!-- Menggunakan Input dengan Datalist untuk pencarian & input manual -->
-                            <input list="inKodeList" id="inKode" oninput="autoFillNamaDatalist('inKode', 'inNama')" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none bg-white" placeholder="Ketik atau cari kode..." autocomplete="off">
+                            <input list="inKodeList" id="inKode" oninput="autoFillNamaDatalist('inKode', 'inNama', 'inHPP')" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none bg-white" placeholder="Ketik atau cari kode..." autocomplete="off">
                             <datalist id="inKodeList">
                                 <!-- Options diisi dari JS -->
                             </datalist>
@@ -178,6 +178,10 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nama Barang</label>
                             <!-- Input bisa diedit secara manual -->
                             <input type="text" id="inNama" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none" placeholder="Otomatis terisi atau ketik manual...">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">HPP (Modal)</label>
+                            <input type="number" id="inHPP" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-navy-500 outline-none" placeholder="Rp">
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah Masuk (Qty)</label>
@@ -255,32 +259,6 @@
             <!-- 4. DAFTAR BARANG (MASTER DATA) -->
             <section id="daftarBarang" class="tab-content">
                 
-                <!-- Form Tambah Barang -->
-                <div class="bg-white p-6 rounded-lg shadow-sm mb-6 border-t-4 border-navy-700">
-                    <h3 class="text-lg font-bold text-navy-800 mb-4">➕ Tambah Barang Baru</h3>
-                    <form id="formBarang" onsubmit="submitBarang(event)" class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                        <div class="md:col-span-1">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Kode Barang</label>
-                            <input type="text" id="brgKode" required placeholder="Cth: BRG-01" class="w-full border border-gray-300 p-2 rounded focus:ring-1 focus:ring-navy-500 outline-none text-sm">
-                        </div>
-                        <div class="md:col-span-1">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Nama Barang</label>
-                            <input type="text" id="brgNama" required placeholder="Nama lengkap" class="w-full border border-gray-300 p-2 rounded focus:ring-1 focus:ring-navy-500 outline-none text-sm">
-                        </div>
-                        <div class="md:col-span-1">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">HPP (Modal)</label>
-                            <input type="number" id="brgHPP" required placeholder="Rp" class="w-full border border-gray-300 p-2 rounded focus:ring-1 focus:ring-navy-500 outline-none text-sm">
-                        </div>
-                        <div class="md:col-span-1">
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Harga Jual</label>
-                            <input type="number" id="brgHarga" required placeholder="Rp" class="w-full border border-gray-300 p-2 rounded focus:ring-1 focus:ring-navy-500 outline-none text-sm">
-                        </div>
-                        <div class="md:col-span-1 flex items-end">
-                            <button type="submit" class="w-full bg-navy-700 text-white font-medium py-2 rounded hover:bg-navy-800 transition text-sm">Simpan</button>
-                        </div>
-                    </form>
-                </div>
-
                 <!-- Tabel Daftar Barang -->
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden">
                     <div class="p-4 border-b flex justify-between items-center bg-gray-50">
@@ -769,22 +747,6 @@
             }
         }
 
-        async function submitBarang(e) {
-            e.preventDefault();
-            const payload = {
-                action: 'addItem',
-                kode: document.getElementById('brgKode').value,
-                nama: document.getElementById('brgNama').value,
-                hpp: document.getElementById('brgHPP').value,
-                harga: document.getElementById('brgHarga').value
-            };
-            const success = await postData(payload);
-            if(success) {
-                document.getElementById('formBarang').reset();
-                fetchItems(); 
-            }
-        }
-
         async function submitMasuk(e) {
             e.preventDefault();
             const payload = {
@@ -792,13 +754,15 @@
                 tanggal: document.getElementById('inTanggal').value,
                 kode: document.getElementById('inKode').value,
                 nama: document.getElementById('inNama').value,
-                jumlah: document.getElementById('inJumlah').value
+                jumlah: document.getElementById('inJumlah').value,
+                hpp: document.getElementById('inHPP').value
             };
             const success = await postData(payload);
             if(success) {
                 document.getElementById('inJumlah').value = '';
                 document.getElementById('inKode').value = '';
                 document.getElementById('inNama').value = '';
+                document.getElementById('inHPP').value = '';
                 fetchItems(); 
             }
         }
@@ -849,14 +813,16 @@
         }
 
         // Fungsi Auto Fill untuk Datalist (Stok Masuk)
-        function autoFillNamaDatalist(inputId, namaId) {
+        function autoFillNamaDatalist(inputId, namaId, hppId) {
             const kode = document.getElementById(inputId).value;
             const item = cachedItems.find(i => i.kode === kode);
             const namaInput = document.getElementById(namaId);
+            const hppInput = document.getElementById(hppId);
             
-            // Jika kode ditemukan di database, isi namanya. Jika tidak biarkan user mengetik bebas.
+            // Jika kode ditemukan di database, isi namanya dan HPP. Jika tidak biarkan user mengetik bebas.
             if (item) {
                 namaInput.value = item.nama;
+                if (hppInput) hppInput.value = item.hpp;
             }
         }
 
