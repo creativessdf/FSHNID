@@ -227,21 +227,28 @@
                             <input type="date" id="outTanggal" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none">
                         </div>
                         
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Marketplace / Channel</label>
+                            <select id="outMarketplace" onchange="calculateProfit()" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none bg-white">
+                                <option value="">-- Pilih Marketplace --</option>
+                                <option value="Shopee">Shopee</option>
+                                <option value="TikTok">TikTok Shop</option>
+                                <option value="Tokopedia">Tokopedia</option>
+                                <option value="Lainnya">Lainnya / Offline (Tanpa Potongan)</option>
+                            </select>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Marketplace / Channel</label>
-                                <select id="outMarketplace" onchange="calculateProfit()" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none bg-white">
-                                    <option value="">-- Pilih Marketplace --</option>
-                                    <option value="Shopee">Shopee</option>
-                                    <option value="TikTok">TikTok Shop</option>
-                                    <option value="Tokopedia">Tokopedia</option>
-                                    <option value="Lainnya">Lainnya / Offline (Tanpa Potongan)</option>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Kode Barang</label>
+                                <select id="outKode" onchange="handleOutKodeChange()" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none bg-white">
+                                    <option value="">-- Pilih Kode --</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Kode & Warna</label>
-                                <select id="outKode" onchange="handleKodeChange('keluar')" required class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none bg-white">
-                                    <option value="">-- Pilih Barang --</option>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Warna</label>
+                                <select id="outWarna" onchange="handleOutWarnaChange()" required disabled class="w-full border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-red-500 outline-none bg-gray-50 disabled:opacity-75 disabled:cursor-not-allowed">
+                                    <option value="">-- Pilih Warna --</option>
                                 </select>
                             </div>
                         </div>
@@ -558,47 +565,91 @@
         function handleKodeChange(type) {
             if (type === 'masuk') {
                 const kode = document.getElementById('inKode').value;
-                const item = cachedItems.find(i => i.kode === kode); // Cari info kode tersebut (ambil data harga globalnya)
+                const item = cachedItems.find(i => i.kode === kode); // Cari info kode tersebut
                 
                 if (item) {
                     if(document.getElementById('inHPP')) document.getElementById('inHPP').value = item.hpp || '';
                     if(document.getElementById('inHarga')) document.getElementById('inHarga').value = item.harga || '';
                 }
-            } else if (type === 'keluar') {
-                const selectedIndex = document.getElementById('outKode').value;
-                const item = cachedItems[selectedIndex]; // Ambil spesifik item beserta warnanya
-                const imgPreviewContainer = document.getElementById('outFotoPreviewContainer');
-                const imgPreview = document.getElementById('outFotoPreview');
-                const warnaLabel = document.getElementById('outWarnaLabel');
-                
-                if (item && item.foto) {
-                    imgPreview.src = item.foto;
-                    imgPreviewContainer.classList.remove('hidden');
-                } else {
-                    imgPreviewContainer.classList.add('hidden');
-                }
-
-                if(item) {
-                    warnaLabel.innerText = item.warna ? `Varian: ${item.warna}` : "Tanpa Warna";
-                }
-
-                calculateProfit();
             }
+        }
+
+        function handleOutKodeChange() {
+            const kode = document.getElementById('outKode').value;
+            const warnaSelect = document.getElementById('outWarna');
+            
+            // Reset state
+            warnaSelect.innerHTML = '<option value="">-- Pilih Warna --</option>';
+            document.getElementById('outFotoPreviewContainer').classList.add('hidden');
+            document.getElementById('profitPanel').classList.add('hidden');
+
+            if (!kode) {
+                warnaSelect.disabled = true;
+                return;
+            }
+
+            warnaSelect.disabled = false;
+            
+            // Filter Varian khusus untuk Kode yang dipilih
+            const variants = cachedItems.filter(i => i.kode === kode);
+            variants.forEach(v => {
+                const warnaValue = v.warna ? v.warna : 'NO_COLOR';
+                const warnaLabel = v.warna ? v.warna : 'Tanpa Warna';
+                warnaSelect.innerHTML += `<option value="${warnaValue}">${warnaLabel} (Stok: ${v.stok})</option>`;
+            });
+        }
+
+        function handleOutWarnaChange() {
+            const kode = document.getElementById('outKode').value;
+            let warna = document.getElementById('outWarna').value;
+            
+            const imgPreviewContainer = document.getElementById('outFotoPreviewContainer');
+            const imgPreview = document.getElementById('outFotoPreview');
+            const warnaLabel = document.getElementById('outWarnaLabel');
+
+            if (!kode || warna === "") {
+                imgPreviewContainer.classList.add('hidden');
+                document.getElementById('profitPanel').classList.add('hidden');
+                return;
+            }
+
+            // Kembalikan identifier "NO_COLOR" menjadi string kosong sesuai database
+            if (warna === "NO_COLOR") warna = "";
+
+            const item = cachedItems.find(i => i.kode === kode && (i.warna || "") === warna);
+
+            // Tampilkan foto jika ada
+            if (item && item.foto) {
+                imgPreview.src = item.foto;
+                imgPreviewContainer.classList.remove('hidden');
+            } else {
+                imgPreviewContainer.classList.add('hidden');
+            }
+
+            if(item) {
+                warnaLabel.innerText = item.warna ? `Varian: ${item.warna}` : "Tanpa Warna";
+            }
+
+            calculateProfit();
         }
 
         function calculateProfit() {
             const mp = document.getElementById('outMarketplace').value;
-            const selectedIndex = document.getElementById('outKode').value;
+            const kode = document.getElementById('outKode').value;
+            let warna = document.getElementById('outWarna').value;
+            
             const qtyStr = document.getElementById('outJumlah').value;
             const qty = parseInt(qtyStr) || 0;
             const panel = document.getElementById('profitPanel');
 
-            if (!mp || !selectedIndex) {
+            if (!mp || !kode || warna === "") {
                 panel.classList.add('hidden');
                 return;
             }
 
-            const item = cachedItems[selectedIndex];
+            if (warna === "NO_COLOR") warna = "";
+
+            const item = cachedItems.find(i => i.kode === kode && (i.warna || "") === warna);
             if (!item) return;
 
             const hargaJualAwal = parseFloat(item.harga) || 0;
@@ -666,23 +717,23 @@
                     
                     const tbody = document.getElementById('itemsTbody');
                     const datalistIn = document.getElementById('inKodeList');
-                    const selectOut = document.getElementById('outKode');
+                    const selectOutKode = document.getElementById('outKode');
                     
                     if(tbody) tbody.innerHTML = '';
                     if(datalistIn) datalistIn.innerHTML = '';
-                    if(selectOut) selectOut.innerHTML = '<option value="">-- Pilih Barang & Varian --</option>';
+                    if(selectOutKode) selectOutKode.innerHTML = '<option value="">-- Pilih Kode --</option>';
 
-                    // Untuk Stok Masuk (Datalist), kita hanya tampilkan kode Unik (Grouped)
+                    // Filter kode unik saja untuk Dropdown Kode Barang
                     const uniqueKodes = [...new Set(items.map(i => i.kode))];
                     uniqueKodes.forEach(kode => {
                         if(datalistIn) datalistIn.innerHTML += `<option value="${kode}">`;
+                        if(selectOutKode) selectOutKode.innerHTML += `<option value="${kode}">${kode}</option>`;
                     });
 
                     if(items.length === 0) {
                         if(tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">Belum ada barang terdaftar.</td></tr>`;
                     } else {
-                        items.forEach((item, index) => {
-                            // Render Tabel
+                        items.forEach((item) => {
                             const imgHtml = item.foto 
                                 ? `<img src="${item.foto}" onclick="openModal('${item.foto}')" class="w-12 h-12 mx-auto object-cover rounded-md border shadow-sm cursor-pointer hover:opacity-75 transition-opacity">` 
                                 : `<div class="w-12 h-12 bg-gray-200 mx-auto rounded-md border flex items-center justify-center text-xs text-gray-400">No Pic</div>`;
@@ -697,10 +748,6 @@
                                     <td class="p-3 font-bold ${item.stok <= 5 ? 'text-red-500' : 'text-green-600'}">${item.stok}</td>
                                 </tr>
                             `;
-                            
-                            // Render Dropdown Keluar (Spesifik per Warna)
-                            const labelKeluar = item.warna ? `${item.kode} - Warna: ${item.warna}` : item.kode;
-                            if(selectOut) selectOut.innerHTML += `<option value="${index}">${labelKeluar} (Stok: ${item.stok})</option>`;
                         });
                     }
                 } catch (parseErr) {
@@ -865,7 +912,7 @@
             }
 
             const payload = {
-                action: 'addMasukMultiple', // Endpoint baru
+                action: 'addMasukMultiple', 
                 tanggal: tanggal,
                 kode: kode,
                 hpp: hpp,
@@ -886,14 +933,16 @@
         async function submitKeluar(e) {
             e.preventDefault();
             const mp = document.getElementById('outMarketplace').value;
-            const selectedIndex = document.getElementById('outKode').value;
+            const kode = document.getElementById('outKode').value;
+            let warna = document.getElementById('outWarna').value;
             const qty = parseInt(document.getElementById('outJumlah').value);
-            const item = cachedItems[selectedIndex]; // Ambil data spesifik varian
+            
+            if (warna === "NO_COLOR") warna = "";
+            const item = cachedItems.find(i => i.kode === kode && (i.warna || "") === warna);
             
             if (!item) return;
 
             const hargaJualAwal = parseFloat(item.harga) || 0;
-            const warnaBarang = item.warna || "";
             const persentaseFee = FEE_MARKETPLACE[mp] || 0;
             const potonganAdmin = (hargaJualAwal * persentaseFee) / 100;
             const hargaBersih = hargaJualAwal - potonganAdmin;
@@ -903,7 +952,7 @@
                 action: 'addKeluar',
                 tanggal: document.getElementById('outTanggal').value,
                 kode: item.kode,
-                warna: warnaBarang, // Mengirimkan warna ke sheet Keluar
+                warna: item.warna || "", // Mengirimkan warna ke sheet Keluar
                 jumlah: qty,
                 marketplace: mp,
                 potonganAdmin: potonganAdmin, 
@@ -915,6 +964,8 @@
             if(success) {
                 document.getElementById('outJumlah').value = '';
                 document.getElementById('outKode').value = '';
+                document.getElementById('outWarna').innerHTML = '<option value="">-- Pilih Warna --</option>';
+                document.getElementById('outWarna').disabled = true;
                 document.getElementById('outMarketplace').value = '';
                 document.getElementById('profitPanel').classList.add('hidden');
                 document.getElementById('outFotoPreviewContainer').classList.add('hidden');
