@@ -339,12 +339,12 @@
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby4WVqH_zFQDosYE-wUMWWzEofmAQwnEhC8Bpkm8gWBZMPxL-dDisQv9DtO_YN4_tlA/exec"; 
         
         // --- PENGATURAN POTONGAN ADMIN (PERSEN %) ---
-        // Anda dapat mengedit angka potongan ini sesuai dengan aturan di spreadsheet/toko Anda
-        const FEE_MARKETPLACE = {
-            'Shopee': 5,     // Potongan admin Shopee (contoh 5%)
-            'TikTok': 4,     // Potongan admin TikTok (contoh 4%)
-            'Tokopedia': 3,  // Potongan admin Tokopedia (contoh 3%)
-            'Lainnya': 0     // Offline tidak ada potongan
+        // Nilai default, akan diperbarui otomatis dari Google Spreadsheet
+        let FEE_MARKETPLACE = {
+            'Shopee': 0,     
+            'TikTok': 0,     
+            'Tokopedia': 0,  
+            'Lainnya': 0     
         };
 
         // State Global
@@ -431,6 +431,20 @@
         // API FETCH FUNCTIONS
         // ==========================================
         
+        async function fetchFees() {
+            if(SCRIPT_URL === "GANTI_URL_APPS_SCRIPT_DISINI") return;
+            try {
+                const response = await fetch(`${SCRIPT_URL}?action=getFees`);
+                const result = await response.json();
+                if(result && result.fees) {
+                    // Timpa variabel FEE_MARKETPLACE dengan data dari Spreadsheet
+                    FEE_MARKETPLACE = result.fees;
+                }
+            } catch (error) {
+                console.error('Gagal memuat potongan fee dari database', error);
+            }
+        }
+
         async function fetchItems() {
             if(SCRIPT_URL === "GANTI_URL_APPS_SCRIPT_DISINI") return;
             
@@ -675,6 +689,7 @@
 
         // Init App On Load
         window.onload = () => {
+            fetchFees();
             fetchItems();
             loadDashboard();
             
