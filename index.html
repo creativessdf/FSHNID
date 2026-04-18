@@ -48,7 +48,6 @@
             <!-- LOGO SECTION -->
             <div class="p-6 border-b border-navy-700 flex flex-col items-center text-center">
                 <div id="logoContainer" class="mb-2">
-                    <!-- Logo image above title as requested -->
                     <img id="mainLogoImg" src="" class="h-16 w-16 mb-2 hidden object-contain rounded-lg bg-white p-1">
                     <div id="mainLogoText" class="text-2xl font-bold text-blue-400">FSHN.ID</div>
                 </div>
@@ -78,7 +77,6 @@
                 <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-4 rounded-lg shadow-sm border-b-2 border-navy-500 gap-4">
                     <h3 class="text-2xl font-bold text-navy-800">Ringkasan Dashboard</h3>
                     
-                    <!-- Filters for Dashboard -->
                     <div class="flex flex-wrap items-center gap-2">
                         <select id="dashMpFilter" onchange="loadDashboard()" class="border p-2 rounded text-xs bg-gray-50 outline-none">
                             <option value="ALL">Semua Marketplace</option>
@@ -130,7 +128,6 @@
                             <label class="block text-xs font-bold mb-1 uppercase">Poto Bahan</label>
                             <input type="file" accept="image/*" onchange="previewImg(this, 'bahan')" class="text-xs w-full border p-2 rounded">
                             <input type="hidden" id="bahanPotoBase64">
-                            <!-- Preview Box -->
                             <div class="mt-2 hidden" id="bahanPreviewBox">
                                 <img id="bahanPreviewImg" src="" class="h-32 w-32 object-cover rounded border border-blue-200">
                             </div>
@@ -149,7 +146,6 @@
                         <button type="submit" class="md:col-span-3 bg-blue-600 text-white font-bold py-2.5 rounded shadow-sm hover:bg-blue-700 transition">Simpan Bahan</button>
                     </form>
                 </div>
-                <!-- Table for Bahan -->
                 <div class="bg-white rounded-lg shadow-sm overflow-hidden border">
                     <div class="p-3 bg-gray-50 border-b flex justify-between items-center"><span class="font-bold">Daftar Bahan</span></div>
                     <div class="overflow-x-auto">
@@ -172,7 +168,6 @@
                             <label class="block text-xs font-bold mb-1 uppercase">Poto Produk</label>
                             <input type="file" accept="image/*" onchange="previewImg(this, 'hpp')" class="text-xs w-full border p-2 rounded">
                             <input type="hidden" id="hppPotoBase64">
-                            <!-- Preview Box -->
                             <div class="mt-2 hidden" id="hppPreviewBox">
                                 <img id="hppPreviewImg" src="" class="h-32 w-32 object-cover rounded border border-purple-200">
                             </div>
@@ -205,7 +200,6 @@
                             <label class="block text-xs font-bold mb-1 uppercase">Poto Pola</label>
                             <input type="file" accept="image/*" onchange="previewImg(this, 'pola')" class="text-xs w-full border p-2 rounded">
                             <input type="hidden" id="polaPotoBase64">
-                            <!-- Preview Box -->
                             <div class="mt-2 hidden" id="polaPreviewBox">
                                 <img id="polaPreviewImg" src="" class="h-48 w-full object-contain rounded border border-yellow-200">
                             </div>
@@ -218,7 +212,7 @@
                 <div id="polaGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
             </section>
 
-            <!-- STOK MASUK & LAINNYA -->
+            <!-- STOK MASUK -->
             <section id="stokMasuk" class="tab-content">
                 <div class="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto border-t-4 border-green-500">
                     <h3 class="text-2xl font-bold text-navy-800 mb-6 border-b pb-2">Input Stok Masuk</h3>
@@ -319,10 +313,8 @@
                          <div><label class="block text-xs font-bold mb-1 uppercase">Teks Sub-Judul</label><input type="text" id="setSubText" placeholder="Sistem Managemen Barang" class="w-full border p-2 rounded text-sm outline-none"></div>
                          <div>
                             <label class="block text-xs font-bold mb-1 uppercase">Logo Gambar</label>
-                            <p class="text-[10px] text-gray-500 mb-1">Rekomendasi: Ukuran 512x512px (Kotak), Format PNG/JPG, Maksimal 1MB.</p>
                             <input type="file" accept="image/*" onchange="previewImg(this, 'setLogo')" class="text-xs w-full mb-2">
                             <input type="hidden" id="setLogoBase64">
-                            <!-- Preview Logo Selected -->
                             <div id="setLogoPreviewBox" class="hidden">
                                 <img id="setLogoPreviewImg" src="" class="h-20 w-20 object-contain rounded border bg-white">
                             </div>
@@ -396,7 +388,6 @@
                     c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
                     const b64 = c.toDataURL('image/jpeg', 0.6);
                     document.getElementById(type+'PotoBase64').value = b64;
-                    // Show preview instantly
                     const prevBox = document.getElementById(type+'PreviewBox');
                     const prevImg = document.getElementById(type+'PreviewImg');
                     if(prevBox && prevImg) {
@@ -416,25 +407,18 @@
                 ]);
                 const dash = await dashRes.json();
                 const revData = await revRes.json();
-                
-                // Filtering
                 const mp = document.getElementById('dashMpFilter').value;
                 const start = document.getElementById('dashStart').value;
                 const end = document.getElementById('dashEnd').value;
-                
                 let omzet = 0;
                 let filteredList = revData.list || [];
-                
                 if(mp !== 'ALL') filteredList = filteredList.filter(r => r.marketplace === mp);
                 if(start) filteredList = filteredList.filter(r => new Date(r.tanggal) >= new Date(start));
                 if(end) { let de = new Date(end); de.setHours(23,59,59); filteredList = filteredList.filter(r => new Date(r.tanggal) <= de); }
-                
                 filteredList.forEach(r => omzet += parseFloat(r.total || 0));
-                
                 document.getElementById('dashTotalMasuk').innerText = dash.totalMasuk || 0;
                 document.getElementById('dashTotalKeluar').innerText = dash.totalKeluar || 0;
                 document.getElementById('dashGrandTotal').innerText = formatRupiah(omzet);
-                
                 const tbody = document.getElementById('topItemsTbody'); tbody.innerHTML = '';
                 (dash.topItems || []).forEach((it, idx) => {
                     tbody.innerHTML += `<tr><td class="p-3">#${idx+1}</td><td class="p-3 font-semibold">${it.kode}</td><td class="p-3">${it.warna || "-"}</td><td class="p-3 font-bold text-red-600">${it.qty}</td></tr>`;
@@ -539,6 +523,9 @@
                 [...new Set(cachedItems.map(i => i.kode))].forEach(k => {
                     sel.innerHTML += `<option value="${k}">${k}</option>`;
                 });
+                const dl = document.getElementById('inKodeList');
+                dl.innerHTML = '';
+                [...new Set(cachedItems.map(i => i.kode))].forEach(k => dl.innerHTML += `<option value="${k}">`);
             } catch(e) { console.error(e); } showLoading(false);
         }
 
@@ -592,6 +579,78 @@
             };
             const ok = await postData({ action: 'saveFees', fees: fees });
             if(ok) FEE_MARKETPLACE = fees;
+        }
+
+        // --- STOK MASUK LOGIC ---
+        function addVariantRow() {
+            const container = document.getElementById('variantsContainer');
+            const newRow = document.createElement('div');
+            newRow.className = "variant-row flex flex-col md:flex-row gap-3 p-3 border rounded-lg bg-gray-50 relative";
+            newRow.innerHTML = `
+                <div class="flex-1">
+                    <label class="block text-xs font-medium mb-1">Warna</label>
+                    <input type="text" class="var-warna w-full border p-2 rounded text-sm outline-none" placeholder="Contoh: Navy">
+                </div>
+                <div class="w-32">
+                    <label class="block text-xs font-medium mb-1">Qty</label>
+                    <input type="number" min="1" class="var-jumlah w-full border p-2 rounded text-sm outline-none" placeholder="0">
+                </div>
+                <div class="flex items-end gap-2">
+                    <label class="flex items-center justify-center w-12 h-[38px] border-2 border-dashed rounded cursor-pointer bg-white relative overflow-hidden">
+                        <span class="text-lg var-foto-icon">📷</span>
+                        <img class="var-foto-preview absolute inset-0 w-full h-full object-cover hidden" />
+                        <input type="file" class="hidden var-foto-input" accept="image/*" onchange="handleVariantImage(this)">
+                        <input type="hidden" class="var-foto-base64">
+                    </label>
+                    <button type="button" onclick="removeVariantRow(this)" class="var-remove-btn text-red-500 p-2 hover:bg-red-50 rounded">🗑️</button>
+                </div>`;
+            container.appendChild(newRow);
+            updateRemoveButtons();
+        }
+
+        function removeVariantRow(btn) {
+            btn.closest('.variant-row').remove();
+            updateRemoveButtons();
+        }
+
+        function updateRemoveButtons() {
+            const btns = document.querySelectorAll('.var-remove-btn');
+            btns.forEach(btn => btn.style.display = btns.length === 1 ? 'none' : 'inline-block');
+        }
+
+        function resetVariants() {
+            document.getElementById('variantsContainer').innerHTML = '';
+            addVariantRow();
+        }
+
+        function handleVariantImage(input) {
+            const f = input.files[0]; if(!f) return;
+            const r = new FileReader(); r.onload = (e) => {
+                const img = new Image(); img.onload = () => {
+                    const c = document.createElement('canvas'); const m = 300; let w=img.width, h=img.height;
+                    if(w>h) { if(w>m) { h*=m/w; w=m; } } else { if(h>m) { w*=m/h; h=m; } }
+                    c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
+                    const b64 = c.toDataURL('image/jpeg', 0.5);
+                    const row = input.closest('.variant-row');
+                    row.querySelector('.var-foto-base64').value = b64;
+                    row.querySelector('.var-foto-preview').src = b64;
+                    row.querySelector('.var-foto-preview').classList.remove('hidden');
+                    row.querySelector('.var-foto-icon').classList.add('hidden');
+                }; img.src = e.target.result;
+            }; r.readAsDataURL(f);
+        }
+
+        async function submitMasuk(e) {
+            e.preventDefault();
+            const variants = [];
+            document.querySelectorAll('.variant-row').forEach(row => {
+                const w = row.querySelector('.var-warna').value;
+                const q = row.querySelector('.var-jumlah').value;
+                const f = row.querySelector('.var-foto-base64').value;
+                if(w && q > 0) variants.push({ warna: w, jumlah: q, foto: f });
+            });
+            const p = { action: 'addMasukMultiple', tanggal: document.getElementById('inTanggal').value, kode: document.getElementById('inKode').value, hpp: document.getElementById('inHPP').value, harga: document.getElementById('inHarga').value, variants: variants };
+            if(await postData(p)) { e.target.reset(); resetVariants(); fetchItems(); loadDashboard(); }
         }
 
         function handleOutKodeChange() {
@@ -673,7 +732,7 @@
         function saveSettings() {
             const u = document.getElementById('settingUrlInput').value.trim();
             if(!u.includes('/exec')) return showToast('URL tidak valid', false);
-            SCRIPT_URL = u; localStorage.setItem('fshn_script_url', u); showToast('Koneksi Disimpan!'); loadDashboard();
+            SCRIPT_URL = u; localStorage.setItem('fshn_script_url', u); showToast('Koneksi Disimpan!'); loadDashboard(); fetchItems(); fetchFees();
         }
 
         window.onload = () => {
@@ -682,6 +741,7 @@
                 document.getElementById('settingUrlInput').value = SCRIPT_URL;
                 loadDashboard(); fetchItems(); fetchFees();
             } else switchTab('pengaturan', document.getElementById('btnPengaturan'));
+            resetVariants();
         };
     </script>
 </body>
