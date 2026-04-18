@@ -120,7 +120,7 @@
                     <!-- Papan Padam Rekod/Log Mengikut Tarikh -->
                     <div class="bg-white rounded-xl shadow-sm border p-4">
                         <h3 class="text-sm font-bold text-red-600 mb-2 flex items-center gap-2">⚠️ Hapus Riwayat Log Berdasarkan Tanggal</h3>
-                        <p class="text-[10px] text-gray-500 mb-4 font-medium">Fitur ini menghapus riwayat dari tabel (Log Masuk / Penjualan) secara permanen sesuai tanggal yang dipilih, namun <b class="text-red-500">tidak merubah</b> jumlah sisa stok master barang Anda saat ini.</p>
+                        <p class="text-[10px] text-gray-500 mb-4 font-medium">Fitur ini menghapus riwayat dari tabel (Log Masuk / Penjualan) secara permanen sesuai tanggal yang dipilih, namun <b class="text-red-500">tidak merubah</b> jumlah sisa stok master dan total pendapatan Anda saat ini.</p>
                         <div class="flex flex-wrap items-end gap-3">
                             <div>
                                 <label class="block text-[10px] font-bold uppercase mb-1">Dari Tanggal</label>
@@ -318,7 +318,7 @@
         let SCRIPT_URL = localStorage.getItem('fshn_script_url') || "";
         let FEE_MARKETPLACE = { 'Shopee': 0, 'TikTok': 0, 'Tokopedia': 0, 'Lainnya': 0 };
         let cachedItems = [];
-        let pendingDeleteConfig = null; // Menyimpan info hapus sementara
+        let pendingDeleteConfig = null; 
 
         // UI SAMBUNGAN
         function updateConnectionBadge(isConnected) {
