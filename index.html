@@ -28,21 +28,21 @@
 </head>
 <body class="bg-gray-100 min-h-screen text-navy-800">
 
-    <!-- Loading Screen -->
+    <!-- Skrin Pemuatan -->
     <div id="loading" class="fixed inset-0 bg-white/80 z-[100] flex flex-col justify-center items-center hidden">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-700"></div>
         <p class="mt-4 text-navy-700 font-medium">Menghubungi Google Script...</p>
     </div>
 
-    <!-- Notification Toast -->
+    <!-- Notifikasi Terapung -->
     <div id="toast" class="fixed top-5 right-5 z-[150] p-4 rounded-lg shadow-xl text-white font-medium transform transition-all duration-300 translate-x-full opacity-0"></div>
 
-    <!-- Image Viewer Modal -->
+    <!-- Modal Gambar -->
     <div id="imageModal" class="fixed inset-0 bg-black/90 z-[110] hidden flex flex-col justify-center items-center p-4 cursor-pointer" onclick="closeModal()">
         <img id="modalImage" class="max-w-full max-h-[85vh] object-contain rounded-md shadow-2xl" src="">
     </div>
 
-    <!-- MODAL KONFIRMASI HAPUS LOG MODERN -->
+    <!-- Modal Konfirmasi Padam Log Rekod -->
     <div id="deleteConfirmModal" class="fixed inset-0 bg-black/60 z-[130] hidden flex flex-col justify-center items-center p-4 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in-95 duration-200">
             <div class="flex items-center justify-center w-14 h-14 rounded-full bg-red-100 mb-4 mx-auto">
@@ -58,7 +58,7 @@
     </div>
 
     <div class="flex flex-col md:flex-row min-h-screen">
-        <!-- Sidebar Navigation -->
+        <!-- Panel Navigasi -->
         <aside class="w-full md:w-64 bg-navy-900 text-white flex-shrink-0 shadow-xl z-20">
             <div class="p-6 border-b border-navy-700 flex flex-col items-center text-center">
                 <div id="logoContainer" class="mb-2">
@@ -83,7 +83,7 @@
             </nav>
         </aside>
 
-        <!-- Main Content Area -->
+        <!-- Kawasan Kandungan Utama -->
         <main class="flex-1 overflow-y-auto bg-gray-50">
             <header class="bg-white border-b p-4 flex justify-between items-center sticky top-0 z-10 shadow-sm">
                 <h2 id="currentTabTitle" class="text-xl font-bold text-navy-800">Dashboard</h2>
@@ -97,7 +97,7 @@
             <div class="p-4 md:p-8">
                 <!-- 1. DASHBOARD -->
                 <section id="dashboard" class="tab-content active space-y-8">
-                    <!-- Profit Grid -->
+                    <!-- Ringkasan Keuntungan -->
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <div class="bg-white border-l-4 border-orange-500 p-4 rounded-xl shadow-sm">
                             <p class="text-[10px] font-bold text-orange-600 uppercase">Shopee Profit</p>
@@ -117,7 +117,7 @@
                         </div>
                     </div>
 
-                    <!-- Panel Hapus Data Log Berdasarkan Tanggal -->
+                    <!-- Papan Padam Rekod/Log Mengikut Tarikh -->
                     <div class="bg-white rounded-xl shadow-sm border p-4">
                         <h3 class="text-sm font-bold text-red-600 mb-2 flex items-center gap-2">⚠️ Hapus Riwayat Log Berdasarkan Tanggal</h3>
                         <p class="text-[10px] text-gray-500 mb-4 font-medium">Fitur ini menghapus riwayat dari tabel (Log Masuk / Penjualan) secara permanen sesuai tanggal yang dipilih, namun <b class="text-red-500">tidak merubah</b> jumlah sisa stok master barang Anda saat ini.</p>
@@ -142,7 +142,7 @@
                         </div>
                     </div>
 
-                    <!-- Riwayat & Log -->
+                    <!-- Senarai Log Masuk dan Keluar -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
                             <div class="bg-green-600 text-white p-3 font-bold flex justify-between items-center">
@@ -262,7 +262,7 @@
                         </div>
                     </div>
 
-                    <!-- CONNECTION SETTINGS -->
+                    <!-- TETAPAN URL GOOGLE SCRIPT -->
                     <div class="bg-white p-6 rounded-xl shadow-sm border-2 border-blue-100">
                         <h3 class="font-bold mb-2 uppercase text-blue-700 tracking-wider">🔗 Koneksi Google Apps Script</h3>
                         <p class="text-[10px] text-gray-500 mb-4 font-bold">Wajib berakhiran /exec. Pastikan deploy di Apps Script diset ke "Anyone".</p>
@@ -314,13 +314,13 @@
     </div>
 
     <script>
-        // GLOBAL VARIABLES
+        // PEMBOLEH UBAH GLOBAL
         let SCRIPT_URL = localStorage.getItem('fshn_script_url') || "";
         let FEE_MARKETPLACE = { 'Shopee': 0, 'TikTok': 0, 'Tokopedia': 0, 'Lainnya': 0 };
         let cachedItems = [];
         let pendingDeleteConfig = null; // Menyimpan info hapus sementara
 
-        // CONNECTION UI
+        // UI SAMBUNGAN
         function updateConnectionBadge(isConnected) {
             const badge = document.getElementById('connectionStatus');
             if (isConnected) {
@@ -332,7 +332,7 @@
             }
         }
 
-        // TABS
+        // FUNGSI TUKAR TAB
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
@@ -354,7 +354,7 @@
             if(tabId === 'barangKeluar') { fetchItems(); document.getElementById('outTanggal').value = new Date().toISOString().split('T')[0]; }
         }
 
-        // CORE UI
+        // ANTARA MUKA ASAS (UI KORE)
         function showLoading(s) { document.getElementById('loading').classList.toggle('hidden', !s); }
         function showToast(m, s=true) {
             const t = document.getElementById('toast');
@@ -368,7 +368,7 @@
         function closeModal() { document.getElementById('imageModal').classList.add('hidden'); }
         function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
 
-        // DASHBOARD DATA
+        // DATA DASHBOARD
         async function loadDashboard() {
             if(!SCRIPT_URL) return;
             try {
@@ -385,19 +385,19 @@
                 const logM = document.getElementById('logMasukContainer'); logM.innerHTML = '';
                 if(d.logMasuk.length === 0) logM.innerHTML = '<p class="text-center p-8 text-xs text-gray-400 italic">Belum ada stok masuk</p>';
                 d.logMasuk.forEach(x => {
-                    logM.innerHTML += `<div class="p-2 flex items-center gap-3 hover:bg-gray-50 transition rounded"><img src="${x.foto || ''}" class="w-10 h-10 rounded object-cover border cursor-pointer bg-white" onclick="openModal('${x.foto}')"><div><p class="font-bold text-xs">${x.kode} - ${x.warna || '-'}</p><p class="text-[8px] text-gray-400 font-bold">${x.tgl ? new Date(x.tgl).toLocaleDateString('id-ID') : x.waktu}</p></div><div class="ml-auto text-green-600 font-bold text-xs">+${x.jumlah}</div></div>`;
+                    logM.innerHTML += `<div class="p-2 flex items-center gap-3 hover:bg-gray-50 transition rounded"><img src="${x.foto || ''}" class="w-10 h-10 rounded object-cover border cursor-pointer bg-white" onclick="openModal('${x.foto}')"><div><p class="font-bold text-xs">${x.kode} - ${x.warna || '-'}</p><p class="text-[8px] text-gray-400 font-bold">${x.waktu}</p></div><div class="ml-auto text-green-600 font-bold text-xs">+${x.jumlah}</div></div>`;
                 });
 
                 const logK = document.getElementById('logKeluarContainer'); logK.innerHTML = '';
                 if(d.logKeluar.length === 0) logK.innerHTML = '<p class="text-center p-8 text-xs text-gray-400 italic">Belum ada penjualan</p>';
                 d.logKeluar.forEach(x => {
-                    logK.innerHTML += `<div class="p-2 flex items-center gap-3 hover:bg-gray-50 transition rounded"><img src="${x.foto || ''}" class="w-10 h-10 rounded object-cover border cursor-pointer bg-white" onclick="openModal('${x.foto}')"><div><p class="font-bold text-xs">${x.kode} - ${x.warna || '-'}</p><p class="text-[8px] text-gray-400 uppercase font-bold">${x.marketplace} | ${x.tgl ? new Date(x.tgl).toLocaleDateString('id-ID') : x.waktu}</p></div><div class="ml-auto text-red-600 font-bold text-xs">-${x.jumlah}</div></div>`;
+                    logK.innerHTML += `<div class="p-2 flex items-center gap-3 hover:bg-gray-50 transition rounded"><img src="${x.foto || ''}" class="w-10 h-10 rounded object-cover border cursor-pointer bg-white" onclick="openModal('${x.foto}')"><div><p class="font-bold text-xs">${x.kode} - ${x.warna || '-'}</p><p class="text-[8px] text-gray-400 uppercase font-bold">${x.marketplace} | ${x.waktu}</p></div><div class="ml-auto text-red-600 font-bold text-xs">-${x.jumlah}</div></div>`;
                 });
 
             } catch(e) { updateConnectionBadge(false); }
         }
 
-        // FITUR HAPUS LOG DENGAN MODAL MODERN
+        // FUNGSI MODAL PADAM LOG REKOD
         function deleteLogsConfirm() {
             const start = document.getElementById('delStartDate').value;
             const end = document.getElementById('delEndDate').value;
@@ -407,14 +407,11 @@
 
             if (!start || !end) return showToast("Silakan pilih rentang tanggal mulai dan akhir terlebih dahulu!", false);
 
-            // Simpan info ke variabel global
             pendingDeleteConfig = { start, end, type };
 
-            // Render isi modal
             const textEl = document.getElementById('deleteConfirmText');
             textEl.innerHTML = `Anda yakin ingin menghapus data riwayat dari tabel <b>${logLabel}</b> untuk rentang tanggal <b>${start}</b> sampai <b>${end}</b>?<br><br><span class="text-[10px] text-red-500 bg-red-50 p-1 rounded font-bold border border-red-100">*Tindakan ini bersifat permanen namun tidak merubah stok master Anda.</span>`;
             
-            // Tampilkan modal
             document.getElementById('deleteConfirmModal').classList.remove('hidden');
         }
 
@@ -426,26 +423,28 @@
         function executeDeleteLogs() {
             if(!pendingDeleteConfig) return;
             
-            // Tutup modal
-            closeDeleteConfirmModal();
+            // Simpan nilai ke variabel lokal sebelum config di-null-kan
+            const start = pendingDeleteConfig.start;
+            const end = pendingDeleteConfig.end;
+            const type = pendingDeleteConfig.type;
             
-            // Eksekusi fungsi backend
+            closeDeleteConfirmModal(); // Tutup modal dan reset variabel global
+            
             postData({
                 action: 'deleteLogs',
-                start: pendingDeleteConfig.start,
-                end: pendingDeleteConfig.end,
-                type: pendingDeleteConfig.type
+                start: start,
+                end: end,
+                type: type
             }).then(ok => {
                 if(ok) {
                     document.getElementById('delStartDate').value = '';
                     document.getElementById('delEndDate').value = '';
-                    loadDashboard(); // Refresh UI
+                    loadDashboard();
                 }
             });
         }
 
-
-        // INVENTORY DATA
+        // DATA INVENTORI
         async function fetchItems() {
             if(!SCRIPT_URL) return;
             try {
@@ -493,7 +492,7 @@
             } catch(e) {}
         }
 
-        // SAVE ACTIONS
+        // FUNGSI SIMPAN
         async function saveSettings() { 
             const urlInput = document.getElementById('settingUrlInput');
             const url = urlInput.value.trim();
@@ -569,7 +568,7 @@
                 }
             }
             if(anySuccess) {
-                // RESET FORM AGAR BISA TERUS INPUT BARANG KELUAR TANPA PINDAH TAB
+                // Jangan tukar tab (kekal di Borang Jualan/Barang Keluar)
                 document.getElementById('outKode').value = "";
                 document.getElementById('variantsKeluarContainer').innerHTML = "";
                 document.getElementById('btnTambahVarianKeluar').disabled = true;
@@ -580,8 +579,6 @@
                 document.getElementById('grandTotalProfit').innerText = "Rp 0";
                 
                 showToast("Data penjualan berhasil disimpan ke sistem!", true);
-                
-                // Fetch Item baru secara background untuk update Sisa Stok di form
                 fetchItems(); 
             }
         }
@@ -602,7 +599,7 @@
             }
         }
 
-        // VARIANT HANDLERS
+        // PENGENDALIAN VARIAN BARANG
         function addVariantRow() {
             const container = document.getElementById('variantsContainer');
             const div = document.createElement('div');
@@ -682,7 +679,7 @@
             } else panel.classList.add('hidden');
         }
 
-        // EDIT & VISUAL
+        // PENYUNTINGAN (EDIT) BARANG & VISUAL
         function openEditModal(idx) {
             const it = cachedItems[idx];
             document.getElementById('editOriginalKode').value = it.kode;
@@ -717,7 +714,7 @@
             if(await postData(p)) { 
                 closeEditModal(); 
                 fetchItems(); 
-                loadDashboard(); // REFRESH DASHBOARD AGAR LOG MASUK MUNCUL
+                loadDashboard();
                 showToast("Data barang berhasil diperbarui!");
             }
         }
@@ -762,7 +759,7 @@
 
         function resetVariants() { document.getElementById('variantsContainer').innerHTML = ''; addVariantRow(); }
 
-        // INITIALIZE
+        // FASA PEMULAAN
         window.onload = () => { 
             applyLogo(); 
             if(SCRIPT_URL) {
