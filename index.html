@@ -42,6 +42,21 @@
         <img id="modalImage" class="max-w-full max-h-[85vh] object-contain rounded-md shadow-2xl" src="">
     </div>
 
+    <!-- MODAL KONFIRMASI HAPUS LOG MODERN -->
+    <div id="deleteConfirmModal" class="fixed inset-0 bg-black/60 z-[130] hidden flex flex-col justify-center items-center p-4 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in-95 duration-200">
+            <div class="flex items-center justify-center w-14 h-14 rounded-full bg-red-100 mb-4 mx-auto">
+                <span class="text-red-600 text-2xl">⚠️</span>
+            </div>
+            <h3 class="text-center font-bold text-navy-900 text-xl mb-2">Konfirmasi Hapus</h3>
+            <p id="deleteConfirmText" class="text-center text-sm text-gray-600 mb-6 leading-relaxed"></p>
+            <div class="flex gap-3">
+                <button type="button" onclick="closeDeleteConfirmModal()" class="flex-1 px-4 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition">Batal</button>
+                <button type="button" onclick="executeDeleteLogs()" class="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition shadow-lg shadow-red-200">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+
     <div class="flex flex-col md:flex-row min-h-screen">
         <!-- Sidebar Navigation -->
         <aside class="w-full md:w-64 bg-navy-900 text-white flex-shrink-0 shadow-xl z-20">
@@ -303,6 +318,7 @@
         let SCRIPT_URL = localStorage.getItem('fshn_script_url') || "";
         let FEE_MARKETPLACE = { 'Shopee': 0, 'TikTok': 0, 'Tokopedia': 0, 'Lainnya': 0 };
         let cachedItems = [];
+        let pendingDeleteConfig = null; // Menyimpan info hapus sementara
 
         // CONNECTION UI
         function updateConnectionBadge(isConnected) {
@@ -381,29 +397,51 @@
             } catch(e) { updateConnectionBadge(false); }
         }
 
+        // FITUR HAPUS LOG DENGAN MODAL MODERN
         function deleteLogsConfirm() {
             const start = document.getElementById('delStartDate').value;
             const end = document.getElementById('delEndDate').value;
             const type = document.getElementById('delLogType').value;
 
-            let logLabel = type === "masuk" ? "Log Masuk" : type === "keluar" ? "Log Penjualan" : "Semua Log (Masuk & Penjualan)";
+            let logLabel = type === "masuk" ? "Log Stok Masuk" : type === "keluar" ? "Log Penjualan" : "Semua Log (Masuk & Penjualan)";
 
             if (!start || !end) return showToast("Silakan pilih rentang tanggal mulai dan akhir terlebih dahulu!", false);
 
-            if(confirm(`PERINGATAN!\n\nAnda yakin ingin menghapus data riwayat dari tabel ${logLabel} untuk rentang tanggal ${start} sampai ${end}?\n\nTindakan ini bersifat permanen namun tidak akan merubah jumlah stok master barang saat ini.`)) {
-                postData({
-                    action: 'deleteLogs',
-                    start: start,
-                    end: end,
-                    type: type
-                }).then(ok => {
-                    if(ok) {
-                        document.getElementById('delStartDate').value = '';
-                        document.getElementById('delEndDate').value = '';
-                        loadDashboard(); // Refresh UI
-                    }
-                });
-            }
+            // Simpan info ke variabel global
+            pendingDeleteConfig = { start, end, type };
+
+            // Render isi modal
+            const textEl = document.getElementById('deleteConfirmText');
+            textEl.innerHTML = `Anda yakin ingin menghapus data riwayat dari tabel <b>${logLabel}</b> untuk rentang tanggal <b>${start}</b> sampai <b>${end}</b>?<br><br><span class="text-[10px] text-red-500 bg-red-50 p-1 rounded font-bold border border-red-100">*Tindakan ini bersifat permanen namun tidak merubah stok master Anda.</span>`;
+            
+            // Tampilkan modal
+            document.getElementById('deleteConfirmModal').classList.remove('hidden');
+        }
+
+        function closeDeleteConfirmModal() {
+            document.getElementById('deleteConfirmModal').classList.add('hidden');
+            pendingDeleteConfig = null;
+        }
+
+        function executeDeleteLogs() {
+            if(!pendingDeleteConfig) return;
+            
+            // Tutup modal
+            closeDeleteConfirmModal();
+            
+            // Eksekusi fungsi backend
+            postData({
+                action: 'deleteLogs',
+                start: pendingDeleteConfig.start,
+                end: pendingDeleteConfig.end,
+                type: pendingDeleteConfig.type
+            }).then(ok => {
+                if(ok) {
+                    document.getElementById('delStartDate').value = '';
+                    document.getElementById('delEndDate').value = '';
+                    loadDashboard(); // Refresh UI
+                }
+            });
         }
 
 
@@ -530,7 +568,22 @@
                     if(ok) anySuccess = true;
                 }
             }
-            if(anySuccess) switchTab('dashboard', document.getElementById('nav-dashboard'));
+            if(anySuccess) {
+                // RESET FORM AGAR BISA TERUS INPUT BARANG KELUAR TANPA PINDAH TAB
+                document.getElementById('outKode').value = "";
+                document.getElementById('variantsKeluarContainer').innerHTML = "";
+                document.getElementById('btnTambahVarianKeluar').disabled = true;
+                
+                document.getElementById('totalProfitPanel').classList.add('hidden');
+                document.getElementById('grandGrossProfit').innerText = "Rp 0";
+                document.getElementById('totalAdminFee').innerText = "0";
+                document.getElementById('grandTotalProfit').innerText = "Rp 0";
+                
+                showToast("Data penjualan berhasil disimpan ke sistem!", true);
+                
+                // Fetch Item baru secara background untuk update Sisa Stok di form
+                fetchItems(); 
+            }
         }
 
         async function postData(p) {
@@ -540,7 +593,7 @@
                 const r = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(p), headers: { 'Content-Type': 'text/plain' } });
                 const res = await r.json();
                 showLoading(false);
-                if(res.status === 'success') { showToast(res.message); return true; }
+                if(res.status === 'success') { return true; }
                 else { showToast(res.message, false); return false; }
             } catch(e) { 
                 showLoading(false); 
@@ -664,14 +717,15 @@
             if(await postData(p)) { 
                 closeEditModal(); 
                 fetchItems(); 
-                loadDashboard(); // REFRESH DASHBOARD AGAR LOG MASUK & NOTIF MUNCUL
+                loadDashboard(); // REFRESH DASHBOARD AGAR LOG MASUK MUNCUL
+                showToast("Data barang berhasil diperbarui!");
             }
         }
 
         function confirmDeleteMaster(idx) {
             const it = cachedItems[idx];
             if(confirm(`Hapus ${it.kode} - ${it.warna || 'Polos'} secara permanen?`)) {
-                postData({ action: 'deleteItem', kode: it.kode, warna: it.warna || "" }).then(ok => { if(ok) fetchItems(); });
+                postData({ action: 'deleteItem', kode: it.kode, warna: it.warna || "" }).then(ok => { if(ok) { showToast("Barang dihapus!"); fetchItems(); } });
             }
         }
 
