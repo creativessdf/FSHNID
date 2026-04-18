@@ -22,434 +22,520 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .btn-active { background-color: #243b53; border-left: 4px solid #60a5fa; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen text-navy-800">
 
-    <!-- Loading Overlay -->
-    <div id="loading" class="fixed inset-0 bg-white/80 z-50 flex flex-col justify-center items-center hidden">
+    <!-- Loading Screen -->
+    <div id="loading" class="fixed inset-0 bg-white/80 z-[100] flex flex-col justify-center items-center hidden">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-700"></div>
-        <p class="mt-4 text-navy-700 font-medium">Memproses Data...</p>
+        <p class="mt-4 text-navy-700 font-medium">Menghubungi Google Script...</p>
     </div>
 
     <!-- Notification Toast -->
-    <div id="toast" class="fixed top-5 right-5 z-50 p-4 rounded-lg shadow-lg text-white font-medium transform transition-all duration-300 translate-x-full opacity-0"></div>
+    <div id="toast" class="fixed top-5 right-5 z-[150] p-4 rounded-lg shadow-xl text-white font-medium transform transition-all duration-300 translate-x-full opacity-0"></div>
 
-    <!-- Modal Zoom View -->
-    <div id="imageModal" class="fixed inset-0 bg-black/90 z-[60] hidden flex flex-col justify-center items-center p-4 cursor-pointer" onclick="closeModal()">
-        <img id="modalImage" class="max-w-full max-h-[85vh] object-contain rounded-md shadow-2xl transition-transform duration-300" src="">
-        <p class="text-white mt-4 text-sm font-medium">Klik di mana saja untuk menutup</p>
+    <!-- Image Viewer Modal -->
+    <div id="imageModal" class="fixed inset-0 bg-black/90 z-[110] hidden flex flex-col justify-center items-center p-4 cursor-pointer" onclick="closeModal()">
+        <img id="modalImage" class="max-w-full max-h-[85vh] object-contain rounded-md shadow-2xl" src="">
     </div>
 
-    <!-- Modal Konfirmasi Hapus -->
-    <div id="confirmModal" class="fixed inset-0 bg-black/60 z-[70] hidden flex flex-col justify-center items-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 text-center transform scale-95 transition-transform">
-            <h3 class="text-xl font-bold text-navy-800 mb-2">Hapus Barang?</h3>
-            <p id="confirmMessage" class="text-sm text-gray-600 mb-6"></p>
-            <div class="flex justify-center gap-3">
-                <button onclick="closeConfirmModal()" class="flex-1 px-4 py-2.5 bg-gray-100 rounded-lg font-medium">Batal</button>
-                <button id="confirmActionBtn" class="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-bold shadow-md">Hapus</button>
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <!-- Sidebar Navigation -->
+        <aside class="w-full md:w-64 bg-navy-900 text-white flex-shrink-0 shadow-xl z-20">
+            <div class="p-6 border-b border-navy-700 flex flex-col items-center text-center">
+                <div id="logoContainer" class="mb-2">
+                    <img id="mainLogoImg" src="" class="h-16 w-16 mb-2 hidden object-contain rounded-lg bg-white p-1">
+                    <div id="mainLogoText" class="text-2xl font-bold text-blue-400 uppercase tracking-tighter">FSHN.ID</div>
+                </div>
+                <p id="subLogoText" class="text-[10px] text-navy-100 uppercase tracking-widest font-semibold">Sistem Managemen Barang</p>
             </div>
-        </div>
+            
+            <nav class="mt-4 flex flex-col px-2 gap-1 overflow-y-auto h-[calc(100vh-200px)]">
+                <button id="nav-dashboard" onclick="switchTab('dashboard', this)" class="nav-btn btn-active flex items-center w-full px-4 py-3 rounded-md hover:bg-navy-800 transition">📊 Dashboard</button>
+                <div class="text-[10px] uppercase font-bold text-navy-500 px-4 mt-4 mb-1">Inventaris</div>
+                <button id="nav-stokMasuk" onclick="switchTab('stokMasuk', this)" class="nav-btn flex items-center w-full px-4 py-3 rounded-md hover:bg-navy-800 transition">📥 Input Stok Masuk</button>
+                <button id="nav-barangKeluar" onclick="switchTab('barangKeluar', this)" class="nav-btn flex items-center w-full px-4 py-3 rounded-md hover:bg-navy-800 transition">📤 Input Barang Keluar</button>
+                <button id="nav-daftarBarang" onclick="switchTab('daftarBarang', this)" class="nav-btn flex items-center w-full px-4 py-3 rounded-md hover:bg-navy-800 transition">📦 Daftar Barang</button>
+                <div class="text-[10px] uppercase font-bold text-navy-500 px-4 mt-4 mb-1">Produksi</div>
+                <button id="nav-bahanProduksi" onclick="switchTab('bahanProduksi', this)" class="nav-btn flex items-center w-full px-4 py-3 rounded-md hover:bg-navy-800 transition">🧵 Harga Bahan</button>
+                <button id="nav-hppProduksi" onclick="switchTab('hppProduksi', this)" class="nav-btn flex items-center w-full px-4 py-3 rounded-md hover:bg-navy-800 transition">🧾 HPP Produksi</button>
+                <button id="nav-polaTas" onclick="switchTab('polaTas', this)" class="nav-btn flex items-center w-full px-4 py-3 rounded-md hover:bg-navy-800 transition">✂️ Pola Tas</button>
+                <div class="my-4 border-t border-navy-700"></div>
+                <button id="nav-pengaturan" onclick="switchTab('pengaturan', this)" class="nav-btn flex items-center w-full px-4 py-3 rounded-md hover:bg-navy-800 text-blue-300">⚙️ Pengaturan</button>
+            </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto bg-gray-50">
+            <header class="bg-white border-b p-4 flex justify-between items-center sticky top-0 z-10 shadow-sm">
+                <h2 id="currentTabTitle" class="text-xl font-bold text-navy-800">Dashboard</h2>
+                <div class="relative flex items-center gap-4">
+                    <div id="connectionStatus" class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-100 text-red-600 text-[10px] font-bold">
+                        <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> TERPUTUS
+                    </div>
+                    <div class="relative">
+                        <button onclick="toggleNotif()" class="p-2 rounded-full hover:bg-gray-100 relative">
+                            <span class="text-xl">🔔</span>
+                            <span id="notifBadge" class="absolute top-1 right-1 bg-red-500 text-white text-[8px] px-1 rounded-full hidden">0</span>
+                        </button>
+                        <div id="notifDropdown" class="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-2xl border hidden">
+                            <div class="p-3 border-b font-bold">Notifikasi Terbaru</div>
+                            <div id="notifList" class="max-h-80 overflow-y-auto divide-y"></div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="p-4 md:p-8">
+                <!-- 1. DASHBOARD -->
+                <section id="dashboard" class="tab-content active space-y-8">
+                    <!-- Profit Grid -->
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white border-l-4 border-orange-500 p-4 rounded-xl shadow-sm">
+                            <p class="text-[10px] font-bold text-orange-600 uppercase">Shopee Profit</p>
+                            <h4 id="profitShopee" class="text-lg font-bold">Rp 0</h4>
+                        </div>
+                        <div class="bg-white border-l-4 border-gray-600 p-4 rounded-xl shadow-sm">
+                            <p class="text-[10px] font-bold text-gray-700 uppercase">TikTok Profit</p>
+                            <h4 id="profitTikTok" class="text-lg font-bold">Rp 0</h4>
+                        </div>
+                        <div class="bg-white border-l-4 border-green-500 p-4 rounded-xl shadow-sm">
+                            <p class="text-[10px] font-bold text-green-600 uppercase">Tokopedia Profit</p>
+                            <h4 id="profitTokopedia" class="text-lg font-bold">Rp 0</h4>
+                        </div>
+                        <div class="bg-white border-l-4 border-blue-500 p-4 rounded-xl shadow-sm">
+                            <p class="text-[10px] font-bold text-blue-600 uppercase">Lainnya Profit</p>
+                            <h4 id="profitLainnya" class="text-lg font-bold">Rp 0</h4>
+                        </div>
+                    </div>
+
+                    <!-- Riwayat & Log -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+                            <div class="bg-green-600 text-white p-3 font-bold flex justify-between items-center">
+                                <span>📥 Log Stok Masuk</span>
+                                <span class="text-[10px] opacity-75">10 Data Terbaru</span>
+                            </div>
+                            <div id="logMasukContainer" class="p-2 divide-y max-h-[400px] overflow-y-auto">
+                                <p class="text-center p-8 text-gray-400 text-sm">Belum ada data masuk</p>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+                            <div class="bg-red-600 text-white p-3 font-bold flex justify-between items-center">
+                                <span>📤 Log Penjualan</span>
+                                <span class="text-[10px] opacity-75">10 Data Terbaru</span>
+                            </div>
+                            <div id="logKeluarContainer" class="p-2 divide-y max-h-[400px] overflow-y-auto">
+                                <p class="text-center p-8 text-gray-400 text-sm">Belum ada data keluar</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 2. STOK MASUK -->
+                <section id="stokMasuk" class="tab-content max-w-2xl mx-auto">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-green-500">
+                        <form onsubmit="submitMasuk(event)" class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-xs font-bold mb-1 uppercase">Tanggal Masuk</label><input type="date" id="inTanggal" required class="w-full border p-2 rounded text-sm"></div>
+                                <div><label class="block text-xs font-bold mb-1 uppercase">Kode Barang</label><input list="inKodeList" id="inKode" oninput="handleKodeChange('masuk')" required class="w-full border p-2 rounded text-sm" placeholder="Contoh: TAS-01"><datalist id="inKodeList"></datalist></div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-xs font-bold mb-1 uppercase">HPP (Modal)</label><input type="number" id="inHPP" required class="w-full border p-2 rounded text-sm"></div>
+                                <div><label class="block text-xs font-bold mb-1 uppercase">Harga Jual</label><input type="number" id="inHarga" required class="w-full border p-2 rounded text-sm"></div>
+                            </div>
+                            <div id="variantsContainer" class="space-y-3 pt-4 border-t"></div>
+                            <button type="button" onclick="addVariantRow()" class="w-full py-2 bg-blue-50 text-blue-600 rounded border border-dashed font-bold text-xs hover:bg-blue-100 transition">+ Tambah Warna</button>
+                            <button type="submit" class="w-full py-3 bg-green-600 text-white rounded-xl font-bold shadow-lg hover:bg-green-700 transition">Simpan Barang Masuk</button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- 3. BARANG KELUAR -->
+                <section id="barangKeluar" class="tab-content max-w-2xl mx-auto">
+                    <div class="bg-white p-6 rounded-xl shadow-lg border-t-4 border-red-500">
+                        <form onsubmit="submitKeluar(event)" class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-xs font-bold mb-1 uppercase">Tanggal Keluar</label><input type="date" id="outTanggal" required class="w-full border p-2 rounded text-sm"></div>
+                                <div><label class="block text-xs font-bold mb-1 uppercase">Marketplace</label>
+                                    <select id="outMarketplace" onchange="updateAllProfit()" class="w-full border p-2 rounded text-sm bg-white outline-none">
+                                        <option value="Shopee">Shopee</option><option value="TikTok">TikTok</option><option value="Tokopedia">Tokopedia</option><option value="Lainnya">Lainnya</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <label class="block text-xs font-bold mb-1 uppercase">Pilih Kode Barang</label>
+                            <select id="outKode" onchange="handleOutKodeChange()" required class="w-full border p-2 rounded text-sm bg-white outline-none"></select>
+                            <div id="variantsKeluarContainer" class="space-y-2"></div>
+                            <button type="button" id="btnTambahVarianKeluar" onclick="addVariantKeluarRow()" disabled class="w-full py-2 bg-red-50 text-red-600 rounded border border-dashed text-xs font-bold">+ Tambah Varian Warna</button>
+                            
+                            <div id="totalProfitPanel" class="hidden bg-navy-800 text-white p-4 rounded-xl space-y-1 shadow-inner">
+                                <div class="flex justify-between text-xs opacity-70 uppercase tracking-tighter"><span>Omzet Gross</span><span id="grandGrossProfit">Rp 0</span></div>
+                                <div class="flex justify-between text-xs text-red-400 uppercase tracking-tighter"><span>Biaya Admin</span><span id="totalAdminFee">0</span></div>
+                                <div class="flex justify-between font-bold text-blue-300 pt-1 border-t border-navy-700 mt-1"><span>PENDAPATAN BERSIH</span><span id="grandTotalProfit">Rp 0</span></div>
+                            </div>
+                            <button type="submit" class="w-full py-3 bg-red-600 text-white rounded-xl font-bold shadow-lg hover:bg-red-700 transition">Simpan Data Penjualan</button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- 4. DAFTAR BARANG -->
+                <section id="daftarBarang" class="tab-content space-y-6">
+                    <div class="bg-white p-4 rounded-xl shadow-sm flex gap-4 border">
+                        <div class="relative flex-1">
+                             <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                             <input type="text" id="searchBarang" oninput="filterBarang()" placeholder="Cari Kode atau Warna..." class="w-full border pl-10 p-2 rounded outline-none focus:ring-2 focus:ring-navy-500">
+                        </div>
+                        <button onclick="fetchItems()" class="bg-navy-800 text-white px-6 py-2 rounded text-sm font-bold hover:bg-navy-700 transition shadow">🔄 Muat Ulang</button>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden border">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-navy-800 text-white">
+                                <tr><th class="p-4 text-center">Foto</th><th class="p-4">Kode</th><th class="p-4">Warna</th><th class="p-4">HPP</th><th class="p-4">Harga</th><th class="p-4">Stok</th><th class="p-4 text-center">Aksi</th></tr>
+                            </thead>
+                            <tbody id="itemsTbody" class="divide-y"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- 5. PENGATURAN -->
+                <section id="pengaturan" class="tab-content space-y-8 max-w-2xl mx-auto">
+                    <!-- BIAYA ADMIN -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-t-4 border-orange-500">
+                        <h3 class="font-bold mb-4 uppercase text-orange-600 tracking-wider">🛒 Biaya Admin Marketplace (%)</h3>
+                        <form onsubmit="saveFees(event)" class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-[10px] font-bold uppercase mb-1">Shopee (%)</label><input type="number" step="0.1" id="feeShopee" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-orange-400"></div>
+                                <div><label class="block text-[10px] font-bold uppercase mb-1">TikTok (%)</label><input type="number" step="0.1" id="feeTikTok" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-orange-400"></div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><label class="block text-[10px] font-bold uppercase mb-1">Tokopedia (%)</label><input type="number" step="0.1" id="feeTokopedia" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-orange-400"></div>
+                                <div><label class="block text-[10px] font-bold uppercase mb-1">Lainnya (%)</label><input type="number" step="0.1" id="feeLainnya" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-orange-400"></div>
+                            </div>
+                            <button type="submit" class="w-full bg-orange-600 text-white font-bold py-2.5 rounded shadow hover:bg-orange-700 transition">Update Biaya Admin</button>
+                        </form>
+                    </div>
+
+                    <!-- VISUAL SIDEBAR -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border">
+                        <h3 class="font-bold mb-4 uppercase text-navy-800 tracking-wider">⚙️ Visual Sidebar</h3>
+                        <div class="space-y-4">
+                            <div><label class="block text-[10px] font-bold uppercase mb-1">Nama Bisnis</label><input type="text" id="setLogoText" placeholder="FSHN.ID" class="w-full border p-2 rounded text-sm outline-none"></div>
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase mb-1">Logo</label>
+                                <input type="file" accept="image/*" onchange="previewImg(this, 'setLogo')" class="text-xs w-full p-2 border rounded bg-gray-50">
+                                <input type="hidden" id="setLogoBase64">
+                            </div>
+                            <button onclick="saveLogoSettings()" class="w-full bg-navy-700 text-white py-2 rounded font-bold text-sm hover:bg-navy-800 transition">Update Visual</button>
+                        </div>
+                    </div>
+
+                    <!-- CONNECTION SETTINGS -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm border-2 border-blue-100">
+                        <h3 class="font-bold mb-2 uppercase text-blue-700 tracking-wider">🔗 Koneksi Google Apps Script</h3>
+                        <p class="text-[10px] text-gray-500 mb-4">Wajib berakhiran <b>/exec</b>. Pastikan deploy di Apps Script diset ke "Anyone".</p>
+                        <input type="url" id="settingUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full border p-3 rounded text-sm mb-4 outline-none focus:ring-2 focus:ring-blue-500 font-mono">
+                        <button id="btnSaveConnection" onclick="saveSettings()" class="w-full bg-blue-600 text-white py-3 rounded font-bold text-sm shadow hover:bg-blue-700 transition">Simpan & Verifikasi Koneksi</button>
+                    </div>
+                </section>
+                
+                <section id="bahanProduksi" class="tab-content"><p class="text-center p-10 font-medium text-gray-400 italic">Modul Harga Bahan Sedang Dimuat...</p></section>
+                <section id="hppProduksi" class="tab-content"><p class="text-center p-10 font-medium text-gray-400 italic">Modul HPP Sedang Dimuat...</p></section>
+                <section id="polaTas" class="tab-content"><p class="text-center p-10 font-medium text-gray-400 italic">Modul Pola Sedang Dimuat...</p></section>
+            </div>
+        </main>
     </div>
 
-    <!-- Modal Edit Barang -->
-    <div id="editModal" class="fixed inset-0 bg-black/60 z-[65] hidden flex flex-col justify-center items-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 transform scale-95 transition-transform max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 class="text-xl font-bold text-navy-800">Edit Data Barang</h3>
-                <button onclick="closeEditModal()" class="text-gray-400 hover:text-red-500 transition text-2xl">&times;</button>
-            </div>
-            <form id="formEdit" onsubmit="submitEdit(event)" class="space-y-4">
-                <input type="hidden" id="editOriginalKode">
-                <input type="hidden" id="editOriginalWarna">
+    <!-- MODAL EDIT DATA -->
+    <div id="editModal" class="fixed inset-0 bg-black/60 z-[120] hidden flex flex-col justify-center items-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+            <h3 class="font-bold mb-4 border-b pb-2 text-navy-800 text-lg">Ubah Data Barang</h3>
+            <form onsubmit="submitEdit(event)" class="space-y-4">
+                <input type="hidden" id="editOriginalKode"><input type="hidden" id="editOriginalWarna">
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold mb-1 uppercase">Kode Barang</label>
-                        <input type="text" id="editKode" required class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-navy-500 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold mb-1 uppercase">Warna</label>
-                        <input type="text" id="editWarna" class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-navy-500 text-sm">
-                    </div>
+                    <div><label class="block text-[10px] font-bold uppercase mb-1 text-gray-500">Kode Baru</label><input type="text" id="editKode" class="w-full border p-2 rounded text-sm"></div>
+                    <div><label class="block text-[10px] font-bold uppercase mb-1 text-gray-500">Warna Baru</label><input type="text" id="editWarna" class="w-full border p-2 rounded text-sm"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold mb-1 uppercase">HPP</label>
-                        <input type="number" id="editHPP" required class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-navy-500 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold mb-1 uppercase">Harga Jual</label>
-                        <input type="number" id="editHarga" required class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-navy-500 text-sm">
-                    </div>
+                    <div><label class="block text-[10px] font-bold uppercase mb-1 text-gray-500">HPP</label><input type="number" id="editHPP" class="w-full border p-2 rounded text-sm"></div>
+                    <div><label class="block text-[10px] font-bold uppercase mb-1 text-gray-500">Harga Jual</label><input type="number" id="editHarga" class="w-full border p-2 rounded text-sm"></div>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold mb-1 uppercase text-red-600 font-bold">Edit Stok Manual</label>
-                    <input type="number" id="editStok" required class="w-full border-2 border-red-100 p-2 rounded outline-none focus:ring-2 focus:ring-red-500 bg-red-50 font-bold text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold mb-1 uppercase">Foto Barang</label>
-                    <div class="flex items-center gap-4">
-                        <img id="editFotoPreview" class="w-16 h-16 object-cover rounded border bg-gray-50 shadow-sm" src="">
-                        <input type="file" accept="image/*" onchange="handleEditImage(this)" class="text-xs">
-                        <input type="hidden" id="editFotoBase64">
+                <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 italic">Update Stok Langsung</label><input type="number" id="editStok" class="w-full border-2 border-red-100 p-2 rounded font-bold text-sm bg-red-50 text-red-700"></div>
+                <div class="flex items-center gap-4 py-2 border-t">
+                    <img id="editFotoPreview" class="w-14 h-14 object-cover rounded border bg-gray-100 shadow-sm">
+                    <div class="flex-1">
+                        <label class="block text-[10px] font-bold uppercase mb-1 text-gray-500">Ganti Foto Produk</label>
+                        <input type="file" accept="image/*" onchange="handleEditImage(this)" class="text-[10px] w-full">
                     </div>
+                    <input type="hidden" id="editFotoBase64">
                 </div>
-                <div class="flex justify-end gap-3 pt-4 border-t">
-                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium">Batal</button>
-                    <button type="submit" class="px-4 py-2 bg-navy-700 text-white rounded-lg shadow-sm font-bold text-sm">Simpan Perubahan</button>
+                <div class="flex gap-2 pt-2">
+                    <button type="submit" class="flex-1 bg-navy-700 text-white font-bold py-2 rounded hover:bg-navy-800 transition">Update Data</button>
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 text-xs text-gray-500 bg-gray-100 rounded hover:bg-gray-200 transition">Batal</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Sidebar & Layout -->
-    <div class="flex flex-col md:flex-row min-h-screen">
-        <aside class="w-full md:w-64 bg-navy-900 text-white flex-shrink-0 shadow-xl z-20">
-            <!-- LOGO SECTION -->
-            <div class="p-6 border-b border-navy-700 flex flex-col items-center text-center">
-                <div id="logoContainer" class="mb-2">
-                    <!-- Logo image above title -->
-                    <img id="mainLogoImg" src="" class="h-16 w-16 mb-2 hidden object-contain rounded-lg bg-white p-1 shadow-inner">
-                    <div id="mainLogoText" class="text-2xl font-bold text-blue-400">FSHN.ID</div>
-                </div>
-                <p id="subLogoText" class="text-[10px] text-navy-100 uppercase tracking-widest font-semibold">Sistem Managemen Barang</p>
-            </div>
-            
-            <nav class="mt-4 flex flex-col px-2 gap-1 overflow-y-auto max-h-[calc(100vh-160px)]">
-                <button id="btnDashboard" onclick="switchTab('dashboard', this)" class="nav-btn btn-active flex items-center w-full px-4 py-3 rounded-md hover:bg-navy-800 transition">📊 Dashboard</button>
-                <div class="text-[10px] uppercase font-bold text-navy-500 px-4 mt-4 mb-1">Inventaris</div>
-                <button onclick="switchTab('stokMasuk', this)" class="nav-btn flex items-center w-full px-4 py-3 rounded-md hover:bg-navy-800 transition">📥 Input Stok Masuk</button>
-                <button onclick="switchTab('barangKeluar', this)" class="nav-btn flex items-center w-full px-4 py-3 rounded-md hover:bg-navy-800 transition">📤 Input Barang Keluar</button>
-                <button onclick="switchTab('daftarBarang', this)" class="nav-btn flex items-center w-full px-4 py-3 rounded-md hover:bg-navy-800 transition">📦 Daftar Barang</button>
-                
-                <div class="text-[10px] uppercase font-bold text-navy-500 px-4 mt-4 mb-1">Produksi</div>
-                <button onclick="switchTab('bahanProduksi', this)" class="nav-btn flex items-center w-full px-4 py-3 rounded-md hover:bg-navy-800 transition">🧵 Harga Bahan</button>
-                <button onclick="switchTab('hppProduksi', this)" class="nav-btn flex items-center w-full px-4 py-3 rounded-md hover:bg-navy-800 transition">🧾 HPP Produksi</button>
-                <button onclick="switchTab('polaTas', this)" class="nav-btn flex items-center w-full px-4 py-3 rounded-md hover:bg-navy-800 transition">✂️ Pola Tas</button>
-                
-                <div class="my-4 border-t border-navy-700"></div>
-                <button id="btnPengaturan" onclick="switchTab('pengaturan', this)" class="nav-btn flex items-center w-full px-4 py-3 rounded-md hover:bg-navy-800 text-blue-300">⚙️ Pengaturan</button>
-            </nav>
-        </aside>
-
-        <main class="flex-1 p-4 md:p-8 overflow-y-auto">
-            <!-- 1. DASHBOARD -->
-            <section id="dashboard" class="tab-content active">
-                <div class="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center bg-white p-4 rounded-lg shadow-sm border-b-2 border-navy-500 gap-4">
-                    <h3 class="text-2xl font-bold text-navy-800">Ringkasan Dashboard</h3>
-                    
-                    <div class="flex flex-wrap items-center gap-2">
-                        <select id="dashMpFilter" onchange="loadDashboard()" class="border p-2 rounded text-xs bg-gray-50 outline-none">
-                            <option value="ALL">Semua Marketplace</option>
-                            <option value="Shopee">Shopee</option>
-                            <option value="TikTok">TikTok Shop</option>
-                            <option value="Tokopedia">Tokopedia</option>
-                            <option value="Lainnya">Lainnya</option>
-                        </select>
-                        <input type="date" id="dashStart" onchange="loadDashboard()" class="border p-2 rounded text-xs outline-none">
-                        <input type="date" id="dashEnd" onchange="loadDashboard()" class="border p-2 rounded text-xs outline-none">
-                        <button onclick="loadDashboard()" class="bg-blue-600 text-white p-2 rounded text-xs font-bold hover:bg-blue-700 transition">🔄 Sinkron</button>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-navy-800 text-white p-6 rounded-xl shadow-lg flex flex-col justify-center">
-                        <p class="text-xs font-bold uppercase tracking-widest opacity-70">Total Keuntungan Bersih</p>
-                        <h4 class="text-3xl font-bold mt-1 text-blue-300" id="dashGrandTotal">Rp 0</h4>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
-                        <p class="text-xs font-bold uppercase text-gray-500">Stok Masuk</p>
-                        <h4 class="text-2xl font-bold mt-1 text-green-600" id="dashTotalMasuk">0</h4>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-red-500">
-                        <p class="text-xs font-bold uppercase text-gray-500">Barang Keluar</p>
-                        <h4 class="text-2xl font-bold mt-1 text-red-600" id="dashTotalKeluar">0</h4>
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-xl shadow-sm">
-                    <h4 class="text-lg font-bold text-navy-800 mb-4 flex items-center gap-2">🏆 Peringkat Barang Terlaris</h4>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm whitespace-nowrap">
-                            <thead class="bg-gray-50 border-b">
-                                <tr><th class="p-3">Peringkat</th><th class="p-3">Kode Barang</th><th class="p-3">Warna</th><th class="p-3">Qty Keluar</th></tr>
-                            </thead>
-                            <tbody id="topItemsTbody" class="divide-y"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 2. HARGA BAHAN PRODUKSI -->
-            <section id="bahanProduksi" class="tab-content">
-                <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-blue-500 mb-6">
-                    <h3 class="text-xl font-bold mb-4 uppercase tracking-tight">Input Harga Bahan Produksi</h3>
-                    <form onsubmit="submitBahanProduksi(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div class="md:col-span-3">
-                            <label class="block text-xs font-bold mb-1 uppercase">Poto Bahan</label>
-                            <input type="file" accept="image/*" onchange="previewImg(this, 'bahan')" class="text-xs w-full border p-2 rounded">
-                            <input type="hidden" id="bahanPotoBase64">
-                            <div class="mt-2 hidden" id="bahanPreviewBox">
-                                <img id="bahanPreviewImg" src="" class="h-32 w-32 object-cover rounded border border-blue-200 shadow-sm">
-                            </div>
-                        </div>
-                        <div><label class="block text-xs font-bold mb-1">NAMA BARANG</label><input type="text" id="bahanNama" required class="w-full border p-2 rounded text-sm"></div>
-                        <div><label class="block text-xs font-bold mb-1">WARNA/CODE</label><input type="text" id="bahanKode" class="w-full border p-2 rounded text-sm"></div>
-                        <div><label class="block text-xs font-bold mb-1">HARGA</label><input type="number" id="bahanHarga" required class="w-full border p-2 rounded text-sm"></div>
-                        <div>
-                            <label class="block text-xs font-bold mb-1">JENIS UKURAN</label>
-                            <select id="bahanUkuran" class="w-full border p-2 rounded text-sm bg-white">
-                                <option>Bungkus</option><option>Roll</option><option>Pack</option><option>Meter</option>
-                            </select>
-                        </div>
-                        <div><label class="block text-xs font-bold mb-1">JUMLAH ISI</label><input type="number" id="bahanIsi" required class="w-full border p-2 rounded text-sm"></div>
-                        <div><label class="block text-xs font-bold mb-1">NAMA TOKO</label><input type="text" id="bahanToko" class="w-full border p-2 rounded text-sm"></div>
-                        <button type="submit" class="md:col-span-3 bg-blue-600 text-white font-bold py-2.5 rounded shadow-sm hover:bg-blue-700 transition">Simpan Bahan</button>
-                    </form>
-                </div>
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden border">
-                    <div class="p-3 bg-gray-50 border-b flex justify-between items-center"><span class="font-bold">Daftar Bahan</span></div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-xs whitespace-nowrap">
-                            <thead class="bg-navy-800 text-white">
-                                <tr><th class="p-3">Poto</th><th class="p-3">Nama</th><th class="p-3">Warna</th><th class="p-3">Harga</th><th class="p-3">Ukuran</th><th class="p-3">Isi</th><th class="p-3">Toko</th></tr>
-                            </thead>
-                            <tbody id="bahanTableTbody" class="divide-y"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 3. HPP PRODUKSI -->
-            <section id="hppProduksi" class="tab-content">
-                <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-purple-500 mb-6">
-                    <h3 class="text-xl font-bold mb-4 uppercase tracking-tight">Input HPP Produksi</h3>
-                    <form onsubmit="submitHppProduksi(event)" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="md:col-span-2">
-                            <label class="block text-xs font-bold mb-1 uppercase">Poto Produk</label>
-                            <input type="file" accept="image/*" onchange="previewImg(this, 'hpp')" class="text-xs w-full border p-2 rounded">
-                            <input type="hidden" id="hppPotoBase64">
-                            <div class="mt-2 hidden" id="hppPreviewBox">
-                                <img id="hppPreviewImg" src="" class="h-32 w-32 object-cover rounded border border-purple-200 shadow-sm">
-                            </div>
-                        </div>
-                        <div><label class="block text-xs font-bold mb-1">NAMA BARANG</label><input type="text" id="hppNama" required class="w-full border p-2 rounded text-sm"></div>
-                        <div><label class="block text-xs font-bold mb-1">JUMLAH PCS</label><input type="number" id="hppJumlah" required oninput="calcHpp()" class="w-full border p-2 rounded text-sm"></div>
-                        <div><label class="block text-xs font-bold mb-1">HPP 1 PCS</label><input type="number" id="hppSatuan" required oninput="calcHpp()" class="w-full border p-2 rounded text-sm"></div>
-                        <div><label class="block text-xs font-bold mb-1">HPP TOTAL</label><input type="text" id="hppTotalDisp" disabled class="w-full border p-2 rounded text-sm bg-gray-50 font-bold"></div>
-                        <div><label class="block text-xs font-bold mb-1">HARGA JUAL</label><input type="number" id="hppJual" required class="w-full border p-2 rounded text-sm"></div>
-                        <div class="md:col-span-2"><label class="block text-xs font-bold mb-1">BAHAN YANG DIBUTUHKAN</label><textarea id="hppBahan" class="w-full border p-2 rounded text-sm" rows="2"></textarea></div>
-                        <button type="submit" class="md:col-span-2 bg-purple-600 text-white font-bold py-2.5 rounded shadow-sm hover:bg-purple-700 transition">Simpan HPP</button>
-                    </form>
-                </div>
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden border">
-                    <table class="w-full text-left text-xs whitespace-nowrap">
-                        <thead class="bg-navy-800 text-white">
-                            <tr><th class="p-3">Poto</th><th class="p-3">Nama Produk</th><th class="p-3">Jml</th><th class="p-3">HPP/Pc</th><th class="p-3">Total</th><th class="p-3">Jual</th></tr>
-                        </thead>
-                        <tbody id="hppTableTbody" class="divide-y"></tbody>
-                    </table>
-                </div>
-            </section>
-
-            <!-- 4. POLA TAS -->
-            <section id="polaTas" class="tab-content">
-                <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-yellow-500 mb-6">
-                    <h3 class="text-xl font-bold mb-4 uppercase tracking-tight">Input Pola Tas</h3>
-                    <form onsubmit="submitPola(event)" class="space-y-4">
-                        <div class="md:col-span-2">
-                            <label class="block text-xs font-bold mb-1 uppercase">Poto Pola</label>
-                            <input type="file" accept="image/*" onchange="previewImg(this, 'pola')" class="text-xs w-full border p-2 rounded">
-                            <input type="hidden" id="polaPotoBase64">
-                            <div class="mt-2 hidden" id="polaPreviewBox">
-                                <img id="polaPreviewImg" src="" class="h-48 w-full object-contain rounded border border-yellow-200 shadow-sm">
-                            </div>
-                        </div>
-                        <div><label class="block text-xs font-bold mb-1">NAMA BARANG</label><input type="text" id="polaNama" required class="w-full border p-2 rounded text-sm"></div>
-                        <div><label class="block text-xs font-bold mb-1">KETERANGAN</label><textarea id="polaKet" class="w-full border p-2 rounded text-sm" rows="3"></textarea></div>
-                        <button type="submit" class="w-full bg-yellow-600 text-white font-bold py-2.5 rounded shadow-sm hover:bg-yellow-700 transition">Simpan Pola</button>
-                    </form>
-                </div>
-                <div id="polaGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
-            </section>
-
-            <!-- STOK MASUK -->
-            <section id="stokMasuk" class="tab-content">
-                <div class="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto border-t-4 border-green-500">
-                    <h3 class="text-2xl font-bold text-navy-800 mb-6 border-b pb-2">Input Stok Masuk</h3>
-                    <form onsubmit="submitMasuk(event)" class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block text-sm font-medium mb-1">Tanggal</label><input type="date" id="inTanggal" required class="w-full border p-2.5 rounded-md outline-none"></div>
-                            <div><label class="block text-sm font-medium mb-1">Kode Barang</label><input list="inKodeList" id="inKode" oninput="handleKodeChange('masuk')" required class="w-full border p-2.5 rounded-md outline-none" placeholder="Ketik kode..."><datalist id="inKodeList"></datalist></div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block text-sm font-medium mb-1">HPP</label><input type="number" id="inHPP" required class="w-full border p-2.5 rounded-md outline-none"></div>
-                            <div><label class="block text-sm font-medium mb-1">Harga Jual</label><input type="number" id="inHarga" required class="w-full border p-2.5 rounded-md outline-none"></div>
-                        </div>
-                        <div class="border-t pt-4">
-                            <h4 class="text-sm font-bold mb-3">Varian Warna & Qty</h4>
-                            <div id="variantsContainer" class="space-y-3"></div>
-                            <button type="button" onclick="addVariantRow()" class="mt-3 text-sm text-blue-600 font-medium w-full bg-blue-50 p-2 rounded-md border border-dashed hover:bg-blue-100 transition font-bold">+ Tambah Warna</button>
-                        </div>
-                        <button type="submit" class="w-full bg-green-600 text-white font-bold py-3 rounded-md mt-4 shadow-md hover:bg-green-700 transition">Simpan Stok Masuk</button>
-                    </form>
-                </div>
-            </section>
-
-            <!-- BARANG KELUAR -->
-            <section id="barangKeluar" class="tab-content">
-                <div class="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto border-t-4 border-red-500">
-                    <h3 class="text-2xl font-bold text-navy-800 mb-6 border-b pb-2">Input Barang Keluar</h3>
-                    <form onsubmit="submitKeluar(event)" class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block text-sm font-medium mb-1">Tanggal Keluar</label><input type="date" id="outTanggal" required class="w-full border p-2.5 rounded-md outline-none"></div>
-                            <div>
-                                <label class="block text-sm font-medium mb-1">Marketplace</label>
-                                <select id="outMarketplace" onchange="updateAllProfit()" required class="w-full border p-2.5 rounded-md bg-white outline-none">
-                                    <option value="">-- Pilih --</option>
-                                    <option value="Shopee">Shopee</option>
-                                    <option value="TikTok">TikTok Shop</option>
-                                    <option value="Tokopedia">Tokopedia</option>
-                                    <option value="Lainnya">Lainnya / Offline</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Kode Barang</label>
-                            <select id="outKode" onchange="handleOutKodeChange()" required class="w-full border p-2.5 rounded-md bg-white outline-none"></select>
-                        </div>
-                        <div id="variantsKeluarContainer" class="space-y-3"></div>
-                        <button type="button" id="btnTambahVarianKeluar" onclick="addVariantKeluarRow()" disabled class="mt-3 text-sm text-red-600 font-medium w-full bg-red-50 p-2 rounded-md border border-dashed opacity-50">+ Tambah Varian Warna</button>
-                        
-                        <div id="totalProfitPanel" class="hidden bg-navy-800 text-white p-4 rounded-lg mt-4 shadow-inner space-y-2">
-                             <div class="flex justify-between items-center opacity-70 border-b border-navy-700 pb-1">
-                                <span class="text-xs uppercase font-bold tracking-widest">Gross</span>
-                                <span id="grandGrossProfit" class="text-sm font-medium">Rp 0</span>
-                            </div>
-                            <div class="flex justify-between items-center text-red-400">
-                                <span class="text-xs uppercase font-bold tracking-widest">Potongan Admin</span>
-                                <span id="totalAdminFee" class="text-sm font-medium">- Rp 0</span>
-                            </div>
-                            <div class="flex justify-between items-center pt-2 border-t border-navy-700">
-                                <span class="text-xs uppercase font-bold tracking-widest">Keuntungan Bersih</span>
-                                <span id="grandTotalProfit" class="text-3xl font-bold text-blue-300">Rp 0</span>
-                            </div>
-                        </div>
-                        <button type="submit" class="w-full bg-red-600 text-white font-bold py-3 rounded-md mt-2 shadow-lg hover:bg-red-700 transition">Catat Penjualan</button>
-                    </form>
-                </div>
-            </section>
-
-            <!-- DAFTAR BARANG -->
-            <section id="daftarBarang" class="tab-content">
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden border-t-4 border-navy-700">
-                    <div class="p-4 border-b bg-gray-50 space-y-3">
-                        <div class="flex justify-between items-center">
-                            <h3 class="text-lg font-bold">Daftar Semua Barang</h3>
-                            <button onclick="fetchItems()" class="text-sm text-blue-600 font-medium hover:underline">🔄 Refresh</button>
-                        </div>
-                        <div class="relative group">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">🔍</span>
-                            <input type="text" id="searchBarang" oninput="filterBarang()" placeholder="Cari Kode atau Warna (Contoh: v60)..." class="w-full pl-10 pr-10 py-2 border-2 rounded-lg outline-none focus:ring-2 focus:ring-navy-500 transition-all font-medium">
-                            <button onclick="clearSearch()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-red-500 hidden" id="clearSearchBtn">
-                                <span class="text-xl">&times;</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left text-sm whitespace-nowrap">
-                            <thead class="bg-navy-800 text-white">
-                                <tr><th class="p-3 w-20 text-center">Foto</th><th class="p-3">Kode</th><th class="p-3">Warna</th><th class="p-3">HPP</th><th class="p-3">Harga</th><th class="p-3">Stok</th><th class="p-3 text-center">Aksi</th></tr>
-                            </thead>
-                            <tbody id="itemsTbody" class="divide-y divide-gray-200"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </section>
-
-            <!-- PENGATURAN -->
-            <section id="pengaturan" class="tab-content">
-                <div class="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto border-t-4 border-blue-500 mb-6">
-                    <h3 class="text-xl font-bold text-navy-800 mb-4 uppercase tracking-tight">⚙️ Konfigurasi Logo & Judul</h3>
-                    <div class="space-y-4 bg-gray-50 p-4 rounded-lg border">
-                         <div><label class="block text-xs font-bold mb-1 uppercase">Teks Judul Utama</label><input type="text" id="setLogoText" placeholder="FSHN.ID" class="w-full border p-2 rounded text-sm outline-none"></div>
-                         <div><label class="block text-xs font-bold mb-1 uppercase">Teks Sub-Judul</label><input type="text" id="setSubText" placeholder="Sistem Managemen Barang" class="w-full border p-2 rounded text-sm outline-none"></div>
-                         <div>
-                            <label class="block text-xs font-bold mb-1 uppercase">Logo Gambar</label>
-                            <p class="text-[10px] text-gray-500 mb-1">Rekomendasi: Ukuran 512x512px (Kotak), Format PNG/JPG, Maksimal 1MB.</p>
-                            <input type="file" accept="image/*" onchange="previewImg(this, 'setLogo')" class="text-xs w-full mb-2">
-                            <input type="hidden" id="setLogoBase64">
-                            <div id="setLogoPreviewBox" class="hidden">
-                                <img id="setLogoPreviewImg" src="" class="h-20 w-20 object-contain rounded border bg-white shadow-sm">
-                            </div>
-                         </div>
-                         <button onclick="saveLogoSettings()" class="w-full bg-navy-700 text-white font-bold py-2 rounded text-sm shadow hover:bg-navy-800 transition">Terapkan Perubahan Logo</button>
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto border-t-4 border-blue-500 mb-6">
-                    <h3 class="text-xl font-bold text-navy-800 mb-6 flex items-center gap-2">⚙️ Pengaturan Koneksi</h3>
-                    <div class="space-y-4">
-                        <div><label class="block text-sm font-medium mb-1">URL Google Apps Script</label><input type="url" id="settingUrlInput" placeholder="https://script.google.com/..." class="w-full border p-2.5 rounded-md outline-none focus:ring-2 focus:ring-blue-500"></div>
-                        <button onclick="saveSettings()" class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-md shadow hover:bg-blue-700 transition">Simpan & Hubungkan</button>
-                    </div>
-                </div>
-
-                <div class="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto border-t-4 border-orange-500">
-                    <h3 class="text-xl font-bold text-navy-800 mb-6 flex items-center gap-2">🛒 Biaya Admin Marketplace (%)</h3>
-                    <form onsubmit="saveFees(event)" class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block text-xs font-bold uppercase mb-1">Shopee</label><input type="number" step="0.1" id="feeShopee" class="w-full border p-2 rounded outline-none" value="0"></div>
-                            <div><label class="block text-xs font-bold uppercase mb-1">TikTok Shop</label><input type="number" step="0.1" id="feeTikTok" class="w-full border p-2 rounded outline-none" value="0"></div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block text-xs font-bold uppercase mb-1">Tokopedia</label><input type="number" step="0.1" id="feeTokopedia" class="w-full border p-2 rounded outline-none" value="0"></div>
-                            <div><label class="block text-xs font-bold uppercase mb-1">Lainnya</label><input type="number" step="0.1" id="feeLainnya" class="w-full border p-2 rounded outline-none" value="0"></div>
-                        </div>
-                        <button type="submit" class="w-full bg-orange-600 text-white font-bold py-2.5 rounded shadow hover:bg-orange-700 transition">Simpan Potongan Admin</button>
-                    </form>
-                </div>
-            </section>
-        </main>
-    </div>
-
     <script>
+        // GLOBAL VARIABLES
         let SCRIPT_URL = localStorage.getItem('fshn_script_url') || "";
         let FEE_MARKETPLACE = { 'Shopee': 0, 'TikTok': 0, 'Tokopedia': 0, 'Lainnya': 0 };
         let cachedItems = [];
 
+        // CONNECTION UI
+        function updateConnectionBadge(isConnected) {
+            const badge = document.getElementById('connectionStatus');
+            if (isConnected) {
+                badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-100 text-green-600 text-[10px] font-bold";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-green-500"></span> TERHUBUNG`;
+            } else {
+                badge.className = "flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-100 text-red-600 text-[10px] font-bold";
+                badge.innerHTML = `<span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> TERPUTUS`;
+            }
+        }
+
+        // TABS
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('btn-active'));
             if(btn) btn.classList.add('btn-active');
             
+            const title = btn ? btn.innerText.replace(/[^\w\s]/gi, '').trim() : 'Dashboard';
+            document.getElementById('currentTabTitle').innerText = title;
+            
+            if (!SCRIPT_URL && tabId !== 'pengaturan') {
+                showToast("Silakan atur koneksi Spreadsheet terlebih dahulu di menu Pengaturan.", false);
+                return;
+            }
+
             if(tabId === 'dashboard') loadDashboard();
             if(tabId === 'daftarBarang') fetchItems();
-            if(tabId === 'bahanProduksi') fetchBahan();
-            if(tabId === 'hppProduksi') fetchHpp();
-            if(tabId === 'polaTas') fetchPola();
+            if(tabId === 'stokMasuk') resetVariants();
+            if(tabId === 'pengaturan') fetchFees();
+            if(tabId === 'barangKeluar') { fetchItems(); document.getElementById('outTanggal').value = new Date().toISOString().split('T')[0]; }
         }
 
+        // CORE UI
         function showLoading(s) { document.getElementById('loading').classList.toggle('hidden', !s); }
         function showToast(m, s=true) {
             const t = document.getElementById('toast');
             t.textContent = m;
-            t.className = `fixed top-5 right-5 z-50 p-4 rounded shadow text-white font-medium transition-all ${s ? 'bg-green-600' : 'bg-red-600'}`;
+            t.className = `fixed top-5 right-5 z-[150] p-4 rounded shadow-xl text-white font-medium transition-all transform duration-300 ${s ? 'bg-green-600' : 'bg-red-600'}`;
             t.classList.remove('translate-x-full', 'opacity-0');
-            setTimeout(() => { t.classList.add('translate-x-full', 'opacity-0'); }, 3000);
+            setTimeout(() => { t.classList.add('translate-x-full', 'opacity-0'); }, 4000);
         }
         function formatRupiah(a) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(a || 0); }
         function openModal(src) { if(!src) return; document.getElementById('modalImage').src = src; document.getElementById('imageModal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('imageModal').classList.add('hidden'); }
-        function closeConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); }
         function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
+        function toggleNotif() { document.getElementById('notifDropdown').classList.toggle('hidden'); }
 
-        function previewImg(input, type) {
+        // DASHBOARD DATA
+        async function loadDashboard() {
+            if(!SCRIPT_URL) return;
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=getDashboard`);
+                if (!res.ok) throw new Error();
+                const d = await res.json();
+                updateConnectionBadge(true);
+                
+                document.getElementById('profitShopee').innerText = formatRupiah(d.mpProfit.Shopee);
+                document.getElementById('profitTikTok').innerText = formatRupiah(d.mpProfit.TikTok);
+                document.getElementById('profitTokopedia').innerText = formatRupiah(d.mpProfit.Tokopedia);
+                document.getElementById('profitLainnya').innerText = formatRupiah(d.mpProfit.Lainnya);
+                
+                const logM = document.getElementById('logMasukContainer'); logM.innerHTML = '';
+                if(d.logMasuk.length === 0) logM.innerHTML = '<p class="text-center p-4 text-xs text-gray-400">Belum ada stok masuk</p>';
+                d.logMasuk.forEach(x => {
+                    logM.innerHTML += `<div class="p-2 flex items-center gap-3 hover:bg-gray-50 transition rounded"><img src="${x.foto || ''}" class="w-10 h-10 rounded object-cover border cursor-pointer" onclick="openModal('${x.foto}')"><div><p class="font-bold text-xs">${x.kode} - ${x.warna || '-'}</p><p class="text-[8px] text-gray-400">${x.waktu}</p></div><div class="ml-auto text-green-600 font-bold text-xs">+${x.jumlah}</div></div>`;
+                });
+
+                const logK = document.getElementById('logKeluarContainer'); logK.innerHTML = '';
+                if(d.logKeluar.length === 0) logK.innerHTML = '<p class="text-center p-4 text-xs text-gray-400">Belum ada penjualan</p>';
+                d.logKeluar.forEach(x => {
+                    logK.innerHTML += `<div class="p-2 flex items-center gap-3 hover:bg-gray-50 transition rounded"><img src="${x.foto || ''}" class="w-10 h-10 rounded object-cover border cursor-pointer" onclick="openModal('${x.foto}')"><div><p class="font-bold text-xs">${x.kode} - ${x.warna || '-'}</p><p class="text-[8px] text-gray-400 uppercase font-semibold">${x.marketplace} | ${x.waktu}</p></div><div class="ml-auto text-red-600 font-bold text-xs">-${x.jumlah}</div></div>`;
+                });
+
+                fetchNotifications();
+            } catch(e) { updateConnectionBadge(false); }
+        }
+
+        async function fetchNotifications() {
+            if(!SCRIPT_URL) return;
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=getNotif`);
+                const data = await res.json();
+                const list = document.getElementById('notifList'); list.innerHTML = '';
+                if(data.length === 0) list.innerHTML = '<p class="p-4 text-center text-xs text-gray-400">Tidak ada notifikasi baru</p>';
+                data.slice(0, 10).forEach(n => {
+                    list.innerHTML += `<div class="p-3 hover:bg-gray-50 transition"><p class="text-[8px] font-bold text-blue-600 uppercase mb-0.5">${n.tipe} | ${n.waktu}</p><p class="text-xs text-navy-800 leading-tight">${n.pesan}</p></div>`;
+                });
+                const badge = document.getElementById('notifBadge');
+                if(data.length > 0) { badge.innerText = data.length > 9 ? '9+' : data.length; badge.classList.remove('hidden'); }
+            } catch(e) {}
+        }
+
+        // INVENTORY DATA
+        async function fetchItems() {
+            if(!SCRIPT_URL) return;
+            try {
+                const r = await fetch(`${SCRIPT_URL}?action=getItems`);
+                const data = await r.json();
+                cachedItems = Array.isArray(data) ? data : [];
+                filterBarang();
+                
+                const sel = document.getElementById('outKode');
+                if(sel) {
+                    sel.innerHTML = '<option value="">-- Pilih Kode Produk --</option>';
+                    [...new Set(cachedItems.map(i => i.kode))].forEach(k => sel.innerHTML += `<option value="${k}">${k}</option>`);
+                }
+                
+                const dl = document.getElementById('inKodeList');
+                if(dl) {
+                    dl.innerHTML = '';
+                    [...new Set(cachedItems.map(i => i.kode))].forEach(k => dl.innerHTML += `<option value="${k}">`);
+                }
+            } catch(e) {}
+        }
+
+        function filterBarang() {
+            const q = document.getElementById('searchBarang').value.toLowerCase().trim();
+            const tbody = document.getElementById('itemsTbody'); tbody.innerHTML = '';
+            cachedItems.filter(i => String(i.kode).toLowerCase().includes(q) || String(i.warna).toLowerCase().includes(q)).forEach((it) => {
+                const img = it.foto ? `<img src="${it.foto}" onclick="openModal('${it.foto}')" class="w-11 h-11 mx-auto object-cover rounded cursor-pointer border shadow-sm">` : '📷';
+                const idx = cachedItems.indexOf(it);
+                tbody.innerHTML += `<tr class="hover:bg-gray-50 transition-colors"><td class="p-4 text-center">${img}</td><td class="p-4 font-bold text-navy-700">${it.kode}</td><td class="p-4 font-medium">${it.warna || "-"}</td><td class="p-4 text-gray-400">${formatRupiah(it.hpp)}</td><td class="p-4 font-semibold">${formatRupiah(it.harga)}</td><td class="p-4 font-bold ${it.stok <= 5 ? 'text-red-500 bg-red-50' : 'text-green-600 bg-green-50'} text-center rounded">${it.stok}</td><td class="p-4 text-center space-x-2"><button onclick="openEditModal(${idx})" class="text-blue-500 p-2 hover:bg-blue-100 rounded-lg transition">✏️</button><button onclick="confirmDeleteMaster(${idx})" class="text-red-500 p-2 hover:bg-red-100 rounded-lg transition">🗑️</button></td></tr>`;
+            });
+        }
+
+        async function fetchFees() {
+            if(!SCRIPT_URL) return;
+            try {
+                const res = await fetch(`${SCRIPT_URL}?action=getFees`);
+                const d = await res.json();
+                if(d.fees) {
+                    FEE_MARKETPLACE = d.fees;
+                    document.getElementById('feeShopee').value = d.fees.Shopee;
+                    document.getElementById('feeTikTok').value = d.fees.TikTok;
+                    document.getElementById('feeTokopedia').value = d.fees.Tokopedia;
+                    document.getElementById('feeLainnya').value = d.fees.Lainnya;
+                }
+            } catch(e) {}
+        }
+
+        // SAVE ACTIONS
+        async function saveSettings() { 
+            const urlInput = document.getElementById('settingUrlInput');
+            const url = urlInput.value.trim();
+            if(!url) return showToast("URL tidak boleh kosong", false);
+            if(!url.startsWith('https://script.google.com/')) return showToast("URL Google Apps Script tidak valid", false);
+            
+            showLoading(true);
+            try {
+                // Verifikasi URL dengan memanggil dashboard secara pasif
+                const res = await fetch(`${url}?action=getDashboard`);
+                if (res.ok) {
+                    // Berhasil: Simpan ke Global dan LocalStorage
+                    localStorage.setItem('fshn_script_url', url);
+                    SCRIPT_URL = url;
+                    
+                    updateConnectionBadge(true);
+                    showToast("Koneksi berhasil terhubung!", true);
+                    
+                    // LANGSUNG AMBIL DATA (Tanpa reload agar kolom tidak kosong)
+                    await loadDashboard();
+                    await fetchItems();
+                    await fetchFees();
+                } else {
+                    throw new Error();
+                }
+            } catch(e) {
+                showToast("Koneksi gagal. Pastikan deploy di Apps Script diset ke 'Anyone'.", false);
+                updateConnectionBadge(false);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function saveFees(e) {
+            e.preventDefault();
+            const fees = {
+                'Shopee': parseFloat(document.getElementById('feeShopee').value) || 0,
+                'TikTok': parseFloat(document.getElementById('feeTikTok').value) || 0,
+                'Tokopedia': parseFloat(document.getElementById('feeTokopedia').value) || 0,
+                'Lainnya': parseFloat(document.getElementById('feeLainnya').value) || 0
+            };
+            if(await postData({ action: 'saveFees', fees: fees })) {
+                FEE_MARKETPLACE = fees;
+                showToast("Biaya admin berhasil diperbarui!");
+            }
+        }
+
+        async function submitMasuk(e) {
+            e.preventDefault();
+            const v = [];
+            document.querySelectorAll('.variant-row').forEach(row => {
+                const w = row.querySelector('.var-warna').value; const q = row.querySelector('.var-jumlah').value; const f = row.querySelector('.var-base64').value;
+                if(w && q>0) v.push({ warna: w, jumlah: q, foto: f });
+            });
+            if(v.length === 0) return showToast("Tambahkan minimal 1 varian warna barang", false);
+            const p = { action: 'addMasukMultiple', tanggal: document.getElementById('inTanggal').value, kode: document.getElementById('inKode').value, hpp: document.getElementById('inHPP').value, harga: document.getElementById('inHarga').value, variants: v };
+            if(await postData(p)) { 
+                switchTab('dashboard', document.getElementById('nav-dashboard')); 
+                resetVariants(); 
+            }
+        }
+
+        async function submitKeluar(e) {
+            e.preventDefault();
+            const date = document.getElementById('outTanggal').value;
+            const kode = document.getElementById('outKode').value;
+            const mp = document.getElementById('outMarketplace').value;
+            const rows = document.querySelectorAll('.variant-keluar-row');
+            let anySuccess = false;
+            for(let r of rows) {
+                let w = r.querySelector('.var-out-warna').value; if(w === 'NO_COLOR') w = "";
+                const q = r.querySelector('.var-out-jumlah').value;
+                const it = cachedItems.find(i => i.kode === kode && (i.warna || "") === w);
+                if(it && q > 0) {
+                    const net = (it.harga * q) - (it.harga * q * (FEE_MARKETPLACE[mp]/100));
+                    const ok = await postData({ action: 'addKeluar', tanggal: date, kode: kode, warna: w, jumlah: q, marketplace: mp, hargaJual: it.harga, totalPendapatan: net });
+                    if(ok) anySuccess = true;
+                }
+            }
+            if(anySuccess) switchTab('dashboard', document.getElementById('nav-dashboard'));
+        }
+
+        async function postData(p) {
+            if(!SCRIPT_URL) { showToast("Atur koneksi di menu Pengaturan!", false); return false; }
+            showLoading(true);
+            try {
+                const r = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(p), headers: { 'Content-Type': 'text/plain' } });
+                const res = await r.json();
+                showLoading(false);
+                if(res.status === 'success') { showToast(res.message); return true; }
+                else { showToast(res.message, false); return false; }
+            } catch(e) { 
+                showLoading(false); 
+                showToast("Eror: Gagal mengirim data ke server.", false); 
+                return false; 
+            }
+        }
+
+        // VARIANT HANDLERS
+        function addVariantRow() {
+            const container = document.getElementById('variantsContainer');
+            const div = document.createElement('div');
+            div.className = "variant-row grid grid-cols-12 gap-2 p-3 bg-gray-50 rounded-lg shadow-inner";
+            div.innerHTML = `<div class="col-span-6"><label class="block text-[8px] font-bold mb-1 uppercase text-gray-400">Warna</label><input type="text" class="var-warna w-full border p-2 rounded text-xs outline-none focus:ring-1 focus:ring-blue-300" placeholder="Navy / Hitam"></div><div class="col-span-3"><label class="block text-[8px] font-bold mb-1 uppercase text-gray-400">Qty</label><input type="number" class="var-jumlah w-full border p-2 rounded text-xs outline-none focus:ring-1 focus:ring-blue-300" placeholder="0"></div><div class="col-span-3 flex items-center gap-2 pt-4"><label class="h-9 w-9 bg-white border-2 border-dashed rounded cursor-pointer flex items-center justify-center overflow-hidden hover:border-blue-400 transition"><img class="var-prev hidden w-full h-full object-cover shadow-sm"><span class="text-sm">📷</span><input type="file" class="hidden" accept="image/*" onchange="handleVarImg(this)"></label><input type="hidden" class="var-base64"><button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400 font-bold hover:text-red-600 transition p-2">&times;</button></div>`;
+            container.appendChild(div);
+        }
+
+        function handleVarImg(input) {
             const f = input.files[0]; if(!f) return;
             const r = new FileReader(); r.onload = (e) => {
                 const img = new Image(); img.onload = () => {
@@ -457,196 +543,70 @@
                     if(w>h) { if(w>m) { h*=m/w; w=m; } } else { if(h>m) { w*=m/h; h=m; } }
                     c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
                     const b64 = c.toDataURL('image/jpeg', 0.6);
-                    document.getElementById(type+'PotoBase64').value = b64;
-                    const prevBox = document.getElementById(type+'PreviewBox');
-                    const prevImg = document.getElementById(type+'PreviewImg');
-                    if(prevBox && prevImg) {
-                        prevImg.src = b64;
-                        prevBox.classList.remove('hidden');
-                    }
+                    const row = input.closest('.variant-row');
+                    row.querySelector('.var-base64').value = b64;
+                    row.querySelector('.var-prev').src = b64;
+                    row.querySelector('.var-prev').classList.remove('hidden');
+                    row.querySelector('span').classList.add('hidden');
                 }; img.src = e.target.result;
             }; r.readAsDataURL(f);
         }
 
-        async function loadDashboard() {
-            if(!SCRIPT_URL) return; showLoading(true);
-            try {
-                const [dashRes, revRes] = await Promise.all([
-                    fetch(`${SCRIPT_URL}?action=getDashboard`),
-                    fetch(`${SCRIPT_URL}?action=getRevenue`)
-                ]);
-                const dash = await dashRes.json();
-                const revData = await revRes.json();
-                const mp = document.getElementById('dashMpFilter').value;
-                const start = document.getElementById('dashStart').value;
-                const end = document.getElementById('dashEnd').value;
-                let omzet = 0;
-                let filteredList = revData.list || [];
-                if(mp !== 'ALL') filteredList = filteredList.filter(r => r.marketplace === mp);
-                if(start) filteredList = filteredList.filter(r => new Date(r.tanggal) >= new Date(start));
-                if(end) { let de = new Date(end); de.setHours(23,59,59); filteredList = filteredList.filter(r => new Date(r.tanggal) <= de); }
-                filteredList.forEach(r => omzet += parseFloat(r.total || 0));
-                document.getElementById('dashTotalMasuk').innerText = dash.totalMasuk || 0;
-                document.getElementById('dashTotalKeluar').innerText = dash.totalKeluar || 0;
-                document.getElementById('dashGrandTotal').innerText = formatRupiah(omzet);
-                const tbody = document.getElementById('topItemsTbody'); tbody.innerHTML = '';
-                (dash.topItems || []).forEach((it, idx) => {
-                    tbody.innerHTML += `<tr><td class="p-3">#${idx+1}</td><td class="p-3 font-semibold">${it.kode}</td><td class="p-3">${it.warna || "-"}</td><td class="p-3 font-bold text-red-600">${it.qty}</td></tr>`;
-                });
-            } catch(e) { console.error(e); } showLoading(false);
+        function handleKodeChange(t) {
+            const k = document.getElementById('inKode').value;
+            const it = cachedItems.find(i => i.kode === k);
+            if(it) {
+                document.getElementById('inHPP').value = it.hpp;
+                document.getElementById('inHarga').value = it.harga;
+            }
         }
 
-        async function fetchBahan() {
-            if(!SCRIPT_URL) return; showLoading(true);
-            try {
-                const r = await fetch(`${SCRIPT_URL}?action=getBahan`);
-                const data = await r.json();
-                const tbody = document.getElementById('bahanTableTbody'); tbody.innerHTML = '';
-                data.forEach(b => {
-                    const img = b.poto ? `<img src="${b.poto}" onclick="openModal('${b.poto}')" class="w-10 h-10 object-cover rounded cursor-pointer">` : '📷';
-                    tbody.innerHTML += `<tr><td class="p-2">${img}</td><td class="p-2">${b.namabarang}</td><td class="p-2">${b.warnacode || '-'}</td><td class="p-2 font-bold">${formatRupiah(b.harga)}</td><td class="p-2">${b.jenisukuran}</td><td class="p-2">${b.jumlahisi}</td><td class="p-2 text-blue-600 font-medium">${b.namatoko || '-'}</td></tr>`;
-                });
-            } catch(e) {} showLoading(false);
+        function handleOutKodeChange() {
+            const k = document.getElementById('outKode').value;
+            const container = document.getElementById('variantsKeluarContainer');
+            const btn = document.getElementById('btnTambahVarianKeluar');
+            container.innerHTML = '';
+            if(!k) { btn.disabled = true; return; }
+            btn.disabled = false; addVariantKeluarRow();
         }
 
-        async function submitBahanProduksi(e) {
-            e.preventDefault();
-            const p = { action: 'saveBahan', poto: document.getElementById('bahanPotoBase64').value, nama: document.getElementById('bahanNama').value, kode: document.getElementById('bahanKode').value, harga: document.getElementById('bahanHarga').value, ukuran: document.getElementById('bahanUkuran').value, isi: document.getElementById('bahanIsi').value, toko: document.getElementById('bahanToko').value };
-            if(await postData(p)) { e.target.reset(); document.getElementById('bahanPreviewBox').classList.add('hidden'); fetchBahan(); }
+        function addVariantKeluarRow() {
+            const k = document.getElementById('outKode').value;
+            const variants = cachedItems.filter(i => i.kode === k);
+            const div = document.createElement('div');
+            div.className = "variant-keluar-row p-2 border rounded bg-gray-50 flex gap-2 items-center shadow-sm";
+            let opt = `<option value="">-- Pilih Warna --</option>`;
+            variants.forEach(v => opt += `<option value="${v.warna || 'NO_COLOR'}">${v.warna || 'Polos'} (Stok: ${v.stok})</option>`);
+            div.innerHTML = `<select class="var-out-warna flex-1 border p-1 rounded text-xs bg-white outline-none focus:ring-1 focus:ring-red-300" onchange="updateAllProfit()">${opt}</select><input type="number" class="var-out-jumlah w-20 border p-1 rounded text-xs outline-none focus:ring-1 focus:ring-red-300" oninput="updateAllProfit()" placeholder="Qty">`;
+            document.getElementById('variantsKeluarContainer').appendChild(div);
         }
 
-        function calcHpp() {
-            const q = document.getElementById('hppJumlah').value || 0;
-            const s = document.getElementById('hppSatuan').value || 0;
-            document.getElementById('hppTotalDisp').value = formatRupiah(q * s);
-        }
-
-        async function fetchHpp() {
-            if(!SCRIPT_URL) return; showLoading(true);
-            try {
-                const r = await fetch(`${SCRIPT_URL}?action=getHpp`);
-                const data = await r.json();
-                const tbody = document.getElementById('hppTableTbody'); tbody.innerHTML = '';
-                data.forEach(h => {
-                    const img = h.poto ? `<img src="${h.poto}" onclick="openModal('${h.poto}')" class="w-10 h-10 object-cover rounded cursor-pointer">` : '📷';
-                    tbody.innerHTML += `<tr><td class="p-2">${img}</td><td class="p-2">${h.namabarang}</td><td class="p-2 text-center">${h.jumlahpcs}</td><td class="p-2">${formatRupiah(h.hpp1pcs)}</td><td class="p-2 font-bold">${formatRupiah(h.hpptotal)}</td><td class="p-2 text-green-600 font-bold">${formatRupiah(h.hargajual)}</td></tr>`;
-                });
-            } catch(e) {} showLoading(false);
-        }
-
-        async function submitHppProduksi(e) {
-            e.preventDefault();
-            const q = document.getElementById('hppJumlah').value;
-            const s = document.getElementById('hppSatuan').value;
-            const p = { action: 'saveHpp', poto: document.getElementById('hppPotoBase64').value, nama: document.getElementById('hppNama').value, bahan: document.getElementById('hppBahan').value, jumlah: q, satuan: s, total: q * s, jual: document.getElementById('hppJual').value };
-            if(await postData(p)) { e.target.reset(); document.getElementById('hppPreviewBox').classList.add('hidden'); fetchHpp(); }
-        }
-
-        async function fetchPola() {
-            if(!SCRIPT_URL) return; showLoading(true);
-            try {
-                const r = await fetch(`${SCRIPT_URL}?action=getPola`);
-                const data = await r.json();
-                const grid = document.getElementById('polaGrid'); grid.innerHTML = '';
-                data.forEach(p => {
-                    grid.innerHTML += `<div class="bg-white p-3 rounded-lg shadow-sm border group"><img src="${p.poto || ''}" onclick="openModal('${p.poto}')" class="w-full h-32 object-cover rounded mb-2 cursor-zoom-in group-hover:opacity-80 transition"><div class="font-bold text-sm text-navy-800">${p.namabarang}</div><p class="text-[10px] text-gray-500 line-clamp-2 mt-1">${p.keterangan || '-'}</p></div>`;
-                });
-            } catch(e) {} showLoading(false);
-        }
-
-        async function submitPola(e) {
-            e.preventDefault();
-            const p = { action: 'savePola', poto: document.getElementById('polaPotoBase64').value, nama: document.getElementById('polaNama').value, keterangan: document.getElementById('polaKet').value };
-            if(await postData(p)) { e.target.reset(); document.getElementById('polaPreviewBox').classList.add('hidden'); fetchPola(); }
-        }
-
-        function saveLogoSettings() {
-            const main = document.getElementById('setLogoText').value || "FSHN.ID";
-            const sub = document.getElementById('setSubText').value || "Sistem Managemen Barang";
-            const b64 = document.getElementById('setLogoBase64').value;
-            const logoConfig = { main, sub, b64 };
-            localStorage.setItem('fshn_logo_config', JSON.stringify(logoConfig));
-            applyLogo(logoConfig);
-            showToast('Logo diperbarui lokal!');
-        }
-
-        function applyLogo(cfg) {
-            if(!cfg) cfg = JSON.parse(localStorage.getItem('fshn_logo_config')) || { main: "FSHN.ID", sub: "Sistem Managemen Barang", b64: "" };
-            document.getElementById('mainLogoText').innerText = cfg.main;
-            document.getElementById('subLogoText').innerText = cfg.sub;
-            const img = document.getElementById('mainLogoImg');
-            if(cfg.b64) { img.src = cfg.b64; img.classList.remove('hidden'); } 
-            else { img.classList.add('hidden'); }
-            document.getElementById('setLogoText').value = cfg.main;
-            document.getElementById('setSubText').value = cfg.sub;
-        }
-
-        async function fetchItems() {
-            if(!SCRIPT_URL) return; showLoading(true);
-            try {
-                const r = await fetch(`${SCRIPT_URL}?action=getItems`);
-                const data = await r.json();
-                cachedItems = Array.isArray(data) ? data : [];
-                filterBarang();
-                const sel = document.getElementById('outKode');
-                sel.innerHTML = '<option value="">-- Pilih Kode --</option>';
-                [...new Set(cachedItems.map(i => i.kode))].forEach(k => {
-                    sel.innerHTML += `<option value="${k}">${k}</option>`;
-                });
-                const dl = document.getElementById('inKodeList');
-                dl.innerHTML = '';
-                [...new Set(cachedItems.map(i => i.kode))].forEach(k => dl.innerHTML += `<option value="${k}">`);
-            } catch(e) { console.error(e); } showLoading(false);
-        }
-
-        async function postData(p) {
-            if(!SCRIPT_URL) return showToast('URL belum diatur!', false);
-            showLoading(true);
-            try {
-                const r = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(p), headers: { 'Content-Type': 'text/plain' } });
-                const text = await r.text();
-                showLoading(false);
-                try {
-                    const res = JSON.parse(text);
-                    if(res.status === 'success') { showToast(res.message); return true; }
-                    else { showToast(res.message, false); return false; }
-                } catch(e) { showToast('Format respon salah dari server', false); return false; }
-            } catch(e) { showLoading(false); showToast('Gagal terhubung ke server', false); return false; }
-        }
-
-        function filterBarang() {
-            const q = document.getElementById('searchBarang').value.toLowerCase().trim();
-            document.getElementById('clearSearchBtn').classList.toggle('hidden', q === "");
-            const tbody = document.getElementById('itemsTbody'); tbody.innerHTML = '';
-            
-            // Perbaikan Fungsi Pencarian: Memaksa data menjadi string untuk menghindari eror jika ada data kosong
-            const filtered = cachedItems.filter(i => {
-                const kodeStr = String(i.kode || "").toLowerCase();
-                const warnaStr = String(i.warna || "").toLowerCase();
-                return kodeStr.includes(q) || warnaStr.includes(q);
+        function updateAllProfit() {
+            const mp = document.getElementById('outMarketplace').value;
+            const fee = FEE_MARKETPLACE[mp] || 0;
+            let gt = 0, omz = 0, count = 0;
+            document.querySelectorAll('.variant-keluar-row').forEach(row => {
+                const w = row.querySelector('.var-out-warna').value; 
+                const q = parseInt(row.querySelector('.var-out-jumlah').value) || 0;
+                if(!w || q <= 0) return;
+                const it = cachedItems.find(i => i.kode === document.getElementById('outKode').value && (i.warna || "NO_COLOR") === w);
+                if(it) {
+                    count++;
+                    const gross = it.harga * q;
+                    const net = gross - (gross * fee / 100);
+                    omz += gross; gt += net;
+                }
             });
-
-            filtered.forEach((it) => {
-                const globalIdx = cachedItems.indexOf(it);
-                const img = it.foto ? `<img src="${it.foto}" onclick="openModal('${it.foto}')" class="w-10 h-10 mx-auto object-cover rounded cursor-pointer border shadow-sm">` : '📷';
-                tbody.innerHTML += `
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="p-3 text-center">${img}</td>
-                    <td class="p-3 font-semibold text-navy-700">${it.kode}</td>
-                    <td class="p-3">${it.warna || "-"}</td>
-                    <td class="p-3">${formatRupiah(it.hpp)}</td>
-                    <td class="p-3">${formatRupiah(it.harga)}</td>
-                    <td class="p-3 font-bold ${it.stok <= 5 ? 'text-red-500' : 'text-green-600'}">${it.stok}</td>
-                    <td class="p-3 text-center space-x-3">
-                        <button onclick="openEditModal(${globalIdx})" class="text-blue-500 hover:text-blue-700 transition" title="Edit">✏️</button>
-                        <button onclick="confirmDeleteMaster(${globalIdx})" class="text-red-500 hover:text-red-700 transition" title="Hapus">🗑️</button>
-                    </td>
-                </tr>`;
-            });
+            const panel = document.getElementById('totalProfitPanel');
+            if(count > 0) {
+                panel.classList.remove('hidden');
+                document.getElementById('grandGrossProfit').innerText = formatRupiah(omz);
+                document.getElementById('totalAdminFee').innerText = "- " + formatRupiah(omz - gt);
+                document.getElementById('grandTotalProfit').innerText = formatRupiah(gt);
+            } else panel.classList.add('hidden');
         }
-        function clearSearch() { document.getElementById('searchBarang').value = ""; filterBarang(); }
 
-        // --- EDIT LOGIC ---
+        // EDIT & VISUAL
         function openEditModal(idx) {
             const it = cachedItems[idx];
             document.getElementById('editOriginalKode').value = it.kode;
@@ -668,7 +628,7 @@
                     const c = document.createElement('canvas'); const m = 400; let w=img.width, h=img.height;
                     if(w>h) { if(w>m) { h*=m/w; w=m; } } else { if(h>m) { w*=m/h; h=m; } }
                     c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
-                    const b64 = c.toDataURL('image/jpeg', 0.5);
+                    const b64 = c.toDataURL('image/jpeg', 0.6);
                     document.getElementById('editFotoBase64').value = b64;
                     document.getElementById('editFotoPreview').src = b64;
                 }; img.src = e.target.result;
@@ -677,218 +637,61 @@
 
         async function submitEdit(e) {
             e.preventDefault();
-            const p = {
-                action: 'updateItem',
-                originalKode: document.getElementById('editOriginalKode').value,
-                originalWarna: document.getElementById('editOriginalWarna').value,
-                newKode: document.getElementById('editKode').value,
-                newWarna: document.getElementById('editWarna').value,
-                hpp: document.getElementById('editHPP').value,
-                harga: document.getElementById('editHarga').value,
-                foto: document.getElementById('editFotoBase64').value,
-                stok: document.getElementById('editStok').value
-            };
-            if(await postData(p)) { closeEditModal(); fetchItems(); loadDashboard(); }
+            const p = { action: 'updateItem', originalKode: document.getElementById('editOriginalKode').value, originalWarna: document.getElementById('editOriginalWarna').value, newKode: document.getElementById('editKode').value, newWarna: document.getElementById('editWarna').value, hpp: document.getElementById('editHPP').value, harga: document.getElementById('editHarga').value, foto: document.getElementById('editFotoBase64').value, stok: document.getElementById('editStok').value };
+            if(await postData(p)) { closeEditModal(); fetchItems(); }
         }
 
         function confirmDeleteMaster(idx) {
             const it = cachedItems[idx];
-            document.getElementById('confirmMessage').innerHTML = `Hapus secara permanen:<br><b>${it.kode}</b> (${it.warna || 'Polos'})?`;
-            document.getElementById('confirmModal').classList.remove('hidden');
-            document.getElementById('confirmActionBtn').onclick = async () => {
-                closeConfirmModal();
-                const ok = await postData({ action: 'deleteItem', kode: it.kode, warna: it.warna || "" });
-                if(ok) { fetchItems(); loadDashboard(); }
-            };
+            if(confirm(`Hapus ${it.kode} - ${it.warna || 'Polos'} secara permanen?`)) {
+                postData({ action: 'deleteItem', kode: it.kode, warna: it.warna || "" }).then(ok => { if(ok) fetchItems(); });
+            }
         }
 
-        async function fetchFees() {
-            if(!SCRIPT_URL) return;
-            try {
-                const r = await fetch(`${SCRIPT_URL}?action=getFees`);
-                const d = await r.json();
-                if(d.fees) {
-                    FEE_MARKETPLACE = d.fees;
-                    document.getElementById('feeShopee').value = FEE_MARKETPLACE['Shopee'] || 0;
-                    document.getElementById('feeTikTok').value = FEE_MARKETPLACE['TikTok'] || 0;
-                    document.getElementById('feeTokopedia').value = FEE_MARKETPLACE['Tokopedia'] || 0;
-                    document.getElementById('feeLainnya').value = FEE_MARKETPLACE['Lainnya'] || 0;
-                }
-            } catch(e) {}
-        }
-        async function saveFees(e) {
-            e.preventDefault();
-            const fees = {
-                'Shopee': parseFloat(document.getElementById('feeShopee').value) || 0,
-                'TikTok': parseFloat(document.getElementById('feeTikTok').value) || 0,
-                'Tokopedia': parseFloat(document.getElementById('feeTokopedia').value) || 0,
-                'Lainnya': parseFloat(document.getElementById('feeLainnya').value) || 0
-            };
-            const ok = await postData({ action: 'saveFees', fees: fees });
-            if(ok) FEE_MARKETPLACE = fees;
+        function saveLogoSettings() {
+            const cfg = { main: document.getElementById('setLogoText').value, b64: document.getElementById('setLogoBase64').value };
+            localStorage.setItem('fshn_logo_config', JSON.stringify(cfg)); 
+            applyLogo(cfg); 
+            showToast('Tampilan sidebar diperbarui!');
         }
 
-        // --- STOK MASUK LOGIC ---
-        function addVariantRow() {
-            const container = document.getElementById('variantsContainer');
-            const newRow = document.createElement('div');
-            newRow.className = "variant-row flex flex-col md:flex-row gap-3 p-3 border rounded-lg bg-gray-50 relative";
-            newRow.innerHTML = `
-                <div class="flex-1">
-                    <label class="block text-xs font-medium mb-1">Warna</label>
-                    <input type="text" class="var-warna w-full border p-2 rounded text-sm outline-none" placeholder="Contoh: Navy">
-                </div>
-                <div class="w-32">
-                    <label class="block text-xs font-medium mb-1">Qty</label>
-                    <input type="number" min="1" class="var-jumlah w-full border p-2 rounded text-sm outline-none" placeholder="0">
-                </div>
-                <div class="flex items-end gap-2">
-                    <label class="flex items-center justify-center w-12 h-[38px] border-2 border-dashed rounded cursor-pointer bg-white relative overflow-hidden">
-                        <span class="text-lg var-foto-icon">📷</span>
-                        <img class="var-foto-preview absolute inset-0 w-full h-full object-cover hidden" />
-                        <input type="file" class="hidden var-foto-input" accept="image/*" onchange="handleVariantImage(this)">
-                        <input type="hidden" class="var-foto-base64">
-                    </label>
-                    <button type="button" onclick="removeVariantRow(this)" class="var-remove-btn text-red-500 p-2 hover:bg-red-50 rounded transition">🗑️</button>
-                </div>`;
-            container.appendChild(newRow);
-            updateRemoveButtons();
+        function applyLogo(cfg) {
+            if(!cfg) {
+                const stored = localStorage.getItem('fshn_logo_config');
+                cfg = stored ? JSON.parse(stored) : { main: "FSHN.ID", sub: "Sistem Managemen Barang", b64: "" };
+            }
+            document.getElementById('mainLogoText').innerText = cfg.main;
+            const img = document.getElementById('mainLogoImg');
+            if(cfg.b64) { img.src = cfg.b64; img.classList.remove('hidden'); } else { img.classList.add('hidden'); }
+            document.getElementById('setLogoText').value = cfg.main;
         }
 
-        function removeVariantRow(btn) {
-            btn.closest('.variant-row').remove();
-            updateRemoveButtons();
-        }
-
-        function updateRemoveButtons() {
-            const btns = document.querySelectorAll('.var-remove-btn');
-            btns.forEach(btn => btn.style.display = btns.length === 1 ? 'none' : 'inline-block');
-        }
-
-        function resetVariants() {
-            document.getElementById('variantsContainer').innerHTML = '';
-            addVariantRow();
-        }
-
-        function handleVariantImage(input) {
+        function previewImg(input, type) {
             const f = input.files[0]; if(!f) return;
             const r = new FileReader(); r.onload = (e) => {
                 const img = new Image(); img.onload = () => {
-                    const c = document.createElement('canvas'); const m = 300; let w=img.width, h=img.height;
+                    const c = document.createElement('canvas'); const m = 400; let w=img.width, h=img.height;
                     if(w>h) { if(w>m) { h*=m/w; w=m; } } else { if(h>m) { w*=m/h; h=m; } }
                     c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
-                    const b64 = c.toDataURL('image/jpeg', 0.5);
-                    const row = input.closest('.variant-row');
-                    row.querySelector('.var-foto-base64').value = b64;
-                    row.querySelector('.var-foto-preview').src = b64;
-                    row.querySelector('.var-foto-preview').classList.remove('hidden');
-                    row.querySelector('.var-foto-icon').classList.add('hidden');
+                    const b64 = c.toDataURL('image/jpeg', 0.6);
+                    document.getElementById(type+'Base64').value = b64;
                 }; img.src = e.target.result;
             }; r.readAsDataURL(f);
         }
 
-        async function submitMasuk(e) {
-            e.preventDefault();
-            const variants = [];
-            document.querySelectorAll('.variant-row').forEach(row => {
-                const w = row.querySelector('.var-warna').value;
-                const q = row.querySelector('.var-jumlah').value;
-                const f = row.querySelector('.var-foto-base64').value;
-                if(w && q > 0) variants.push({ warna: w, jumlah: q, foto: f });
-            });
-            const p = { action: 'addMasukMultiple', tanggal: document.getElementById('inTanggal').value, kode: document.getElementById('inKode').value, hpp: document.getElementById('inHPP').value, harga: document.getElementById('inHarga').value, variants: variants };
-            if(await postData(p)) { e.target.reset(); resetVariants(); fetchItems(); loadDashboard(); }
-        }
+        function resetVariants() { document.getElementById('variantsContainer').innerHTML = ''; addVariantRow(); }
 
-        function handleOutKodeChange() {
-            const k = document.getElementById('outKode').value;
-            const container = document.getElementById('variantsKeluarContainer');
-            const btn = document.getElementById('btnTambahVarianKeluar');
-            container.innerHTML = '';
-            if(!k) { btn.disabled = true; btn.classList.add('opacity-50'); return; }
-            btn.disabled = false; btn.classList.remove('opacity-50');
-            addVariantKeluarRow();
-        }
-        function addVariantKeluarRow() {
-            const k = document.getElementById('outKode').value;
-            const variants = cachedItems.filter(i => i.kode === k);
-            const div = document.createElement('div');
-            div.className = "variant-keluar-row p-3 border rounded bg-gray-50 mb-2";
-            let opt = `<option value="">-- Warna --</option>`;
-            variants.forEach(v => opt += `<option value="${v.warna || 'NO_COLOR'}">${v.warna || 'Polos'} (Stok: ${v.stok})</option>`);
-            div.innerHTML = `<div class="flex gap-2"><select class="var-out-warna w-full border p-2 rounded text-sm outline-none bg-white" onchange="updateAllProfit()" required>${opt}</select><input type="number" class="var-out-jumlah w-24 border p-2 rounded text-sm outline-none bg-white" oninput="updateAllProfit()" placeholder="Qty" required></div><div class="var-out-preview hidden flex items-center gap-2 mt-2 bg-white p-2 rounded border border-dashed"><img class="var-out-img w-8 h-8 rounded border object-cover shadow-sm"><span class="text-[10px] text-green-600 font-bold var-out-net"></span></div>`;
-            document.getElementById('variantsKeluarContainer').appendChild(div);
-        }
-        function updateAllProfit() {
-            const mp = document.getElementById('outMarketplace').value;
-            const fee = FEE_MARKETPLACE[mp] || 0;
-            let gt = 0, omz = 0, count = 0;
-            document.querySelectorAll('.variant-keluar-row').forEach(row => {
-                const w = row.querySelector('.var-out-warna').value;
-                const q = parseInt(row.querySelector('.var-out-jumlah').value) || 0;
-                if(!w || q <= 0) return;
-                const it = cachedItems.find(i => i.kode === document.getElementById('outKode').value && (i.warna || "NO_COLOR") === w);
-                if(it) {
-                    count++;
-                    const gross = it.harga * q;
-                    const net = gross - (gross * fee / 100);
-                    omz += gross; gt += net;
-                    row.querySelector('.var-out-preview').classList.remove('hidden');
-                    row.querySelector('.var-out-img').src = it.foto || "";
-                    row.querySelector('.var-out-net').innerText = formatRupiah(net);
-                }
-            });
-            const panel = document.getElementById('totalProfitPanel');
-            if(count > 0) {
-                panel.classList.remove('hidden');
-                document.getElementById('grandGrossProfit').innerText = formatRupiah(omz);
-                document.getElementById('totalAdminFee').innerText = "- " + formatRupiah(omz - gt);
-                document.getElementById('grandTotalProfit').innerText = formatRupiah(gt);
-            } else panel.classList.add('hidden');
-        }
-
-        async function submitKeluar(e) {
-            e.preventDefault();
-            const date = document.getElementById('outTanggal').value;
-            const kode = document.getElementById('outKode').value;
-            const mp = document.getElementById('outMarketplace').value;
-            const rows = document.querySelectorAll('.variant-keluar-row');
-            let sc = 0;
-            for(let r of rows) {
-                let w = r.querySelector('.var-out-warna').value;
-                if(w === 'NO_COLOR') w = "";
-                const q = r.querySelector('.var-out-jumlah').value;
-                const it = cachedItems.find(i => i.kode === kode && (i.warna || "") === w);
-                if(it) {
-                    const net = (it.harga * q) - (it.harga * q * (FEE_MARKETPLACE[mp]/100));
-                    if(await postData({ action: 'addKeluar', tanggal: date, kode: kode, warna: w, jumlah: q, marketplace: mp, hargaJual: it.harga, totalPendapatan: net })) sc++;
-                }
-            }
-            if(sc > 0) { fetchItems(); loadDashboard(); e.target.reset(); handleOutKodeChange(); }
-        }
-
-        function handleKodeChange(t) {
-            const k = document.getElementById('inKode').value;
-            const it = cachedItems.find(i => i.kode === k);
-            if(it && t === 'masuk') {
-                document.getElementById('inHPP').value = it.hpp;
-                document.getElementById('inHarga').value = it.harga;
-            }
-        }
-
-        function saveSettings() {
-            const u = document.getElementById('settingUrlInput').value.trim();
-            if(!u.includes('/exec')) return showToast('URL tidak valid', false);
-            SCRIPT_URL = u; localStorage.setItem('fshn_script_url', u); showToast('Koneksi Disimpan!'); loadDashboard(); fetchItems(); fetchFees();
-        }
-
-        window.onload = () => {
-            applyLogo();
+        // INITIALIZE
+        window.onload = () => { 
+            applyLogo(); 
             if(SCRIPT_URL) {
                 document.getElementById('settingUrlInput').value = SCRIPT_URL;
-                loadDashboard(); fetchItems(); fetchFees();
-            } else switchTab('pengaturan', document.getElementById('btnPengaturan'));
-            resetVariants();
+                loadDashboard(); 
+                fetchFees();
+            } else {
+                updateConnectionBadge(false);
+                switchTab('pengaturan', document.getElementById('nav-pengaturan'));
+            }
         };
     </script>
 </body>
