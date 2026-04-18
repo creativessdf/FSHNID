@@ -76,19 +76,6 @@
                     <div id="connectionStatus" class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-100 text-red-600 text-[10px] font-bold">
                         <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span> TERPUTUS
                     </div>
-                    <div class="relative">
-                        <button onclick="toggleNotif()" class="p-2 rounded-full hover:bg-gray-100 relative">
-                            <span class="text-xl">🔔</span>
-                            <span id="notifBadge" class="absolute top-1 right-1 bg-red-500 text-white text-[8px] px-1 rounded-full hidden">0</span>
-                        </button>
-                        <div id="notifDropdown" class="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-2xl border hidden">
-                            <div class="p-3 border-b font-bold flex justify-between items-center">
-                                <span>Notifikasi Aktivitas</span>
-                                <button onclick="fetchNotifications()" class="text-blue-500 text-[10px] font-bold">REfresh</button>
-                            </div>
-                            <div id="notifList" class="max-h-80 overflow-y-auto divide-y"></div>
-                        </div>
-                    </div>
                 </div>
             </header>
 
@@ -112,6 +99,31 @@
                         <div class="bg-white border-l-4 border-blue-500 p-4 rounded-xl shadow-sm">
                             <p class="text-[10px] font-bold text-blue-600 uppercase">Lainnya Profit</p>
                             <h4 id="profitLainnya" class="text-lg font-bold">Rp 0</h4>
+                        </div>
+                    </div>
+
+                    <!-- Panel Hapus Data Log Berdasarkan Tanggal -->
+                    <div class="bg-white rounded-xl shadow-sm border p-4">
+                        <h3 class="text-sm font-bold text-red-600 mb-2 flex items-center gap-2">⚠️ Hapus Riwayat Log Berdasarkan Tanggal</h3>
+                        <p class="text-[10px] text-gray-500 mb-4 font-medium">Fitur ini menghapus riwayat dari tabel (Log Masuk / Penjualan) secara permanen sesuai tanggal yang dipilih, namun <b class="text-red-500">tidak merubah</b> jumlah sisa stok master barang Anda saat ini.</p>
+                        <div class="flex flex-wrap items-end gap-3">
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase mb-1">Dari Tanggal</label>
+                                <input type="date" id="delStartDate" class="border p-2 rounded text-xs outline-none focus:ring-1 focus:ring-red-400 bg-gray-50">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase mb-1">Sampai Tanggal</label>
+                                <input type="date" id="delEndDate" class="border p-2 rounded text-xs outline-none focus:ring-1 focus:ring-red-400 bg-gray-50">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold uppercase mb-1">Pilih Target Log</label>
+                                <select id="delLogType" class="border p-2 rounded text-xs outline-none bg-white focus:ring-1 focus:ring-red-400">
+                                    <option value="masuk">Log Stok Masuk</option>
+                                    <option value="keluar">Log Penjualan</option>
+                                    <option value="semua">Semuanya (Masuk & Penjualan)</option>
+                                </select>
+                            </div>
+                            <button onclick="deleteLogsConfirm()" class="bg-red-600 text-white px-4 py-2 rounded text-xs font-bold hover:bg-red-700 transition shadow">🗑️ Hapus Log Data</button>
                         </div>
                     </div>
 
@@ -339,7 +351,6 @@
         function openModal(src) { if(!src) return; document.getElementById('modalImage').src = src; document.getElementById('imageModal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('imageModal').classList.add('hidden'); }
         function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
-        function toggleNotif() { document.getElementById('notifDropdown').classList.toggle('hidden'); }
 
         // DASHBOARD DATA
         async function loadDashboard() {
@@ -356,35 +367,45 @@
                 document.getElementById('profitLainnya').innerText = formatRupiah(d.mpProfit.Lainnya);
                 
                 const logM = document.getElementById('logMasukContainer'); logM.innerHTML = '';
-                if(d.logMasuk.length === 0) logM.innerHTML = '<p class="text-center p-4 text-xs text-gray-400">Belum ada stok masuk</p>';
+                if(d.logMasuk.length === 0) logM.innerHTML = '<p class="text-center p-8 text-xs text-gray-400 italic">Belum ada stok masuk</p>';
                 d.logMasuk.forEach(x => {
-                    logM.innerHTML += `<div class="p-2 flex items-center gap-3 hover:bg-gray-50 transition rounded"><img src="${x.foto || ''}" class="w-10 h-10 rounded object-cover border cursor-pointer bg-white" onclick="openModal('${x.foto}')"><div><p class="font-bold text-xs">${x.kode} - ${x.warna || '-'}</p><p class="text-[8px] text-gray-400">${x.waktu}</p></div><div class="ml-auto text-green-600 font-bold text-xs">+${x.jumlah}</div></div>`;
+                    logM.innerHTML += `<div class="p-2 flex items-center gap-3 hover:bg-gray-50 transition rounded"><img src="${x.foto || ''}" class="w-10 h-10 rounded object-cover border cursor-pointer bg-white" onclick="openModal('${x.foto}')"><div><p class="font-bold text-xs">${x.kode} - ${x.warna || '-'}</p><p class="text-[8px] text-gray-400 font-bold">${x.tgl ? new Date(x.tgl).toLocaleDateString('id-ID') : x.waktu}</p></div><div class="ml-auto text-green-600 font-bold text-xs">+${x.jumlah}</div></div>`;
                 });
 
                 const logK = document.getElementById('logKeluarContainer'); logK.innerHTML = '';
-                if(d.logKeluar.length === 0) logK.innerHTML = '<p class="text-center p-4 text-xs text-gray-400">Belum ada penjualan</p>';
+                if(d.logKeluar.length === 0) logK.innerHTML = '<p class="text-center p-8 text-xs text-gray-400 italic">Belum ada penjualan</p>';
                 d.logKeluar.forEach(x => {
-                    logK.innerHTML += `<div class="p-2 flex items-center gap-3 hover:bg-gray-50 transition rounded"><img src="${x.foto || ''}" class="w-10 h-10 rounded object-cover border cursor-pointer bg-white" onclick="openModal('${x.foto}')"><div><p class="font-bold text-xs">${x.kode} - ${x.warna || '-'}</p><p class="text-[8px] text-gray-400 uppercase font-semibold">${x.marketplace} | ${x.waktu}</p></div><div class="ml-auto text-red-600 font-bold text-xs">-${x.jumlah}</div></div>`;
+                    logK.innerHTML += `<div class="p-2 flex items-center gap-3 hover:bg-gray-50 transition rounded"><img src="${x.foto || ''}" class="w-10 h-10 rounded object-cover border cursor-pointer bg-white" onclick="openModal('${x.foto}')"><div><p class="font-bold text-xs">${x.kode} - ${x.warna || '-'}</p><p class="text-[8px] text-gray-400 uppercase font-bold">${x.marketplace} | ${x.tgl ? new Date(x.tgl).toLocaleDateString('id-ID') : x.waktu}</p></div><div class="ml-auto text-red-600 font-bold text-xs">-${x.jumlah}</div></div>`;
                 });
 
-                fetchNotifications();
             } catch(e) { updateConnectionBadge(false); }
         }
 
-        async function fetchNotifications() {
-            if(!SCRIPT_URL) return;
-            try {
-                const res = await fetch(`${SCRIPT_URL}?action=getNotif`);
-                const data = await res.json();
-                const list = document.getElementById('notifList'); list.innerHTML = '';
-                if(data.length === 0) list.innerHTML = '<p class="p-4 text-center text-xs text-gray-400">Tidak ada notifikasi baru</p>';
-                data.slice(0, 15).forEach(n => {
-                    list.innerHTML += `<div class="p-3 hover:bg-gray-50 transition border-l-4 ${n.tipe.toLowerCase().includes('tambah') ? 'border-green-500' : 'border-blue-500'}"><p class="text-[8px] font-bold text-navy-800 uppercase mb-0.5">${n.tipe} | ${n.waktu}</p><p class="text-xs text-navy-600 leading-tight font-bold">${n.pesan}</p></div>`;
+        function deleteLogsConfirm() {
+            const start = document.getElementById('delStartDate').value;
+            const end = document.getElementById('delEndDate').value;
+            const type = document.getElementById('delLogType').value;
+
+            let logLabel = type === "masuk" ? "Log Masuk" : type === "keluar" ? "Log Penjualan" : "Semua Log (Masuk & Penjualan)";
+
+            if (!start || !end) return showToast("Silakan pilih rentang tanggal mulai dan akhir terlebih dahulu!", false);
+
+            if(confirm(`PERINGATAN!\n\nAnda yakin ingin menghapus data riwayat dari tabel ${logLabel} untuk rentang tanggal ${start} sampai ${end}?\n\nTindakan ini bersifat permanen namun tidak akan merubah jumlah stok master barang saat ini.`)) {
+                postData({
+                    action: 'deleteLogs',
+                    start: start,
+                    end: end,
+                    type: type
+                }).then(ok => {
+                    if(ok) {
+                        document.getElementById('delStartDate').value = '';
+                        document.getElementById('delEndDate').value = '';
+                        loadDashboard(); // Refresh UI
+                    }
                 });
-                const badge = document.getElementById('notifBadge');
-                if(data.length > 0) { badge.innerText = data.length > 9 ? '9+' : data.length; badge.classList.remove('hidden'); }
-            } catch(e) {}
+            }
         }
+
 
         // INVENTORY DATA
         async function fetchItems() {
