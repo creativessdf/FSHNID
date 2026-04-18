@@ -47,7 +47,7 @@
         <aside class="w-full md:w-64 bg-navy-900 text-white flex-shrink-0 shadow-xl z-20">
             <div class="p-6 border-b border-navy-700 flex flex-col items-center text-center">
                 <div id="logoContainer" class="mb-2">
-                    <img id="mainLogoImg" src="" class="h-16 w-16 mb-2 hidden object-contain rounded-lg bg-white p-1">
+                    <img id="mainLogoImg" src="" class="h-16 w-16 mb-2 hidden object-contain rounded-lg bg-white p-1 shadow-inner">
                     <div id="mainLogoText" class="text-2xl font-bold text-blue-400 uppercase tracking-tighter">FSHN.ID</div>
                 </div>
                 <p id="subLogoText" class="text-[10px] text-navy-100 uppercase tracking-widest font-semibold">Sistem Managemen Barang</p>
@@ -82,7 +82,10 @@
                             <span id="notifBadge" class="absolute top-1 right-1 bg-red-500 text-white text-[8px] px-1 rounded-full hidden">0</span>
                         </button>
                         <div id="notifDropdown" class="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-2xl border hidden">
-                            <div class="p-3 border-b font-bold">Notifikasi Terbaru</div>
+                            <div class="p-3 border-b font-bold flex justify-between items-center">
+                                <span>Notifikasi Aktivitas</span>
+                                <button onclick="fetchNotifications()" class="text-blue-500 text-[10px] font-bold">REfresh</button>
+                            </div>
                             <div id="notifList" class="max-h-80 overflow-y-auto divide-y"></div>
                         </div>
                     </div>
@@ -119,8 +122,8 @@
                                 <span>📥 Log Stok Masuk</span>
                                 <span class="text-[10px] opacity-75">10 Data Terbaru</span>
                             </div>
-                            <div id="logMasukContainer" class="p-2 divide-y max-h-[400px] overflow-y-auto">
-                                <p class="text-center p-8 text-gray-400 text-sm">Belum ada data masuk</p>
+                            <div id="logMasukContainer" class="p-2 divide-y max-h-[400px] overflow-y-auto min-h-[100px]">
+                                <p class="text-center p-8 text-gray-400 text-sm italic">Memuat data riwayat...</p>
                             </div>
                         </div>
                         <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
@@ -128,8 +131,8 @@
                                 <span>📤 Log Penjualan</span>
                                 <span class="text-[10px] opacity-75">10 Data Terbaru</span>
                             </div>
-                            <div id="logKeluarContainer" class="p-2 divide-y max-h-[400px] overflow-y-auto">
-                                <p class="text-center p-8 text-gray-400 text-sm">Belum ada data keluar</p>
+                            <div id="logKeluarContainer" class="p-2 divide-y max-h-[400px] overflow-y-auto min-h-[100px]">
+                                <p class="text-center p-8 text-gray-400 text-sm italic">Memuat data riwayat...</p>
                             </div>
                         </div>
                     </div>
@@ -148,7 +151,7 @@
                                 <div><label class="block text-xs font-bold mb-1 uppercase">Harga Jual</label><input type="number" id="inHarga" required class="w-full border p-2 rounded text-sm"></div>
                             </div>
                             <div id="variantsContainer" class="space-y-3 pt-4 border-t"></div>
-                            <button type="button" onclick="addVariantRow()" class="w-full py-2 bg-blue-50 text-blue-600 rounded border border-dashed font-bold text-xs hover:bg-blue-100 transition">+ Tambah Warna</button>
+                            <button type="button" onclick="addVariantRow()" class="w-full py-2 bg-blue-50 text-blue-600 rounded border border-dashed font-bold text-xs hover:bg-blue-100 transition font-bold">+ Tambah Varian Warna</button>
                             <button type="submit" class="w-full py-3 bg-green-600 text-white rounded-xl font-bold shadow-lg hover:bg-green-700 transition">Simpan Barang Masuk</button>
                         </form>
                     </div>
@@ -186,9 +189,9 @@
                     <div class="bg-white p-4 rounded-xl shadow-sm flex gap-4 border">
                         <div class="relative flex-1">
                              <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
-                             <input type="text" id="searchBarang" oninput="filterBarang()" placeholder="Cari Kode atau Warna..." class="w-full border pl-10 p-2 rounded outline-none focus:ring-2 focus:ring-navy-500">
+                             <input type="text" id="searchBarang" oninput="filterBarang()" placeholder="Cari Kode atau Warna..." class="w-full border pl-10 p-2 rounded outline-none focus:ring-2 focus:ring-navy-500 font-bold">
                         </div>
-                        <button onclick="fetchItems()" class="bg-navy-800 text-white px-6 py-2 rounded text-sm font-bold hover:bg-navy-700 transition shadow">🔄 Muat Ulang</button>
+                        <button onclick="fetchItems()" class="bg-navy-800 text-white px-6 py-2 rounded text-sm font-bold hover:bg-navy-700 transition shadow">🔄 Segarkan Data</button>
                     </div>
                     <div class="bg-white rounded-xl shadow-sm overflow-hidden border">
                         <table class="w-full text-left text-sm whitespace-nowrap">
@@ -207,14 +210,14 @@
                         <h3 class="font-bold mb-4 uppercase text-orange-600 tracking-wider">🛒 Biaya Admin Marketplace (%)</h3>
                         <form onsubmit="saveFees(event)" class="space-y-4">
                             <div class="grid grid-cols-2 gap-4">
-                                <div><label class="block text-[10px] font-bold uppercase mb-1">Shopee (%)</label><input type="number" step="0.1" id="feeShopee" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-orange-400"></div>
-                                <div><label class="block text-[10px] font-bold uppercase mb-1">TikTok (%)</label><input type="number" step="0.1" id="feeTikTok" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-orange-400"></div>
+                                <div><label class="block text-[10px] font-bold uppercase mb-1">Shopee (%)</label><input type="number" step="0.1" id="feeShopee" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-orange-400 font-bold"></div>
+                                <div><label class="block text-[10px] font-bold uppercase mb-1">TikTok (%)</label><input type="number" step="0.1" id="feeTikTok" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-orange-400 font-bold"></div>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
-                                <div><label class="block text-[10px] font-bold uppercase mb-1">Tokopedia (%)</label><input type="number" step="0.1" id="feeTokopedia" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-orange-400"></div>
-                                <div><label class="block text-[10px] font-bold uppercase mb-1">Lainnya (%)</label><input type="number" step="0.1" id="feeLainnya" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-orange-400"></div>
+                                <div><label class="block text-[10px] font-bold uppercase mb-1">Tokopedia (%)</label><input type="number" step="0.1" id="feeTokopedia" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-orange-400 font-bold"></div>
+                                <div><label class="block text-[10px] font-bold uppercase mb-1">Lainnya (%)</label><input type="number" step="0.1" id="feeLainnya" class="w-full border p-2 rounded text-sm outline-none focus:ring-1 focus:ring-orange-400 font-bold"></div>
                             </div>
-                            <button type="submit" class="w-full bg-orange-600 text-white font-bold py-2.5 rounded shadow hover:bg-orange-700 transition">Update Biaya Admin</button>
+                            <button type="submit" class="w-full bg-orange-600 text-white font-bold py-2.5 rounded shadow hover:bg-orange-700 transition font-bold uppercase tracking-widest text-xs">Simpan Persentase Admin</button>
                         </form>
                     </div>
 
@@ -222,22 +225,22 @@
                     <div class="bg-white p-6 rounded-xl shadow-sm border">
                         <h3 class="font-bold mb-4 uppercase text-navy-800 tracking-wider">⚙️ Visual Sidebar</h3>
                         <div class="space-y-4">
-                            <div><label class="block text-[10px] font-bold uppercase mb-1">Nama Bisnis</label><input type="text" id="setLogoText" placeholder="FSHN.ID" class="w-full border p-2 rounded text-sm outline-none"></div>
+                            <div><label class="block text-[10px] font-bold uppercase mb-1">Nama Bisnis</label><input type="text" id="setLogoText" placeholder="FSHN.ID" class="w-full border p-2 rounded text-sm outline-none font-bold"></div>
                             <div>
                                 <label class="block text-[10px] font-bold uppercase mb-1">Logo</label>
                                 <input type="file" accept="image/*" onchange="previewImg(this, 'setLogo')" class="text-xs w-full p-2 border rounded bg-gray-50">
                                 <input type="hidden" id="setLogoBase64">
                             </div>
-                            <button onclick="saveLogoSettings()" class="w-full bg-navy-700 text-white py-2 rounded font-bold text-sm hover:bg-navy-800 transition">Update Visual</button>
+                            <button onclick="saveLogoSettings()" class="w-full bg-navy-700 text-white py-2 rounded font-bold text-sm hover:bg-navy-800 transition">Update Visual Sidebar</button>
                         </div>
                     </div>
 
                     <!-- CONNECTION SETTINGS -->
                     <div class="bg-white p-6 rounded-xl shadow-sm border-2 border-blue-100">
                         <h3 class="font-bold mb-2 uppercase text-blue-700 tracking-wider">🔗 Koneksi Google Apps Script</h3>
-                        <p class="text-[10px] text-gray-500 mb-4">Wajib berakhiran <b>/exec</b>. Pastikan deploy di Apps Script diset ke "Anyone".</p>
-                        <input type="url" id="settingUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full border p-3 rounded text-sm mb-4 outline-none focus:ring-2 focus:ring-blue-500 font-mono">
-                        <button id="btnSaveConnection" onclick="saveSettings()" class="w-full bg-blue-600 text-white py-3 rounded font-bold text-sm shadow hover:bg-blue-700 transition">Simpan & Verifikasi Koneksi</button>
+                        <p class="text-[10px] text-gray-500 mb-4 font-bold">Wajib berakhiran /exec. Pastikan deploy di Apps Script diset ke "Anyone".</p>
+                        <input type="url" id="settingUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full border p-3 rounded text-sm mb-4 outline-none focus:ring-2 focus:ring-blue-500 font-mono text-[10px] font-bold">
+                        <button id="btnSaveConnection" onclick="saveSettings()" class="w-full bg-blue-600 text-white py-3 rounded font-bold text-sm shadow hover:bg-blue-700 transition">Simpan Koneksi Database</button>
                     </div>
                 </section>
                 
@@ -251,29 +254,33 @@
     <!-- MODAL EDIT DATA -->
     <div id="editModal" class="fixed inset-0 bg-black/60 z-[120] hidden flex flex-col justify-center items-center p-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
-            <h3 class="font-bold mb-4 border-b pb-2 text-navy-800 text-lg">Ubah Data Barang</h3>
+            <h3 class="font-bold mb-4 border-b pb-2 text-navy-800 text-lg">Ubah Data & Stok Barang</h3>
             <form onsubmit="submitEdit(event)" class="space-y-4">
                 <input type="hidden" id="editOriginalKode"><input type="hidden" id="editOriginalWarna">
                 <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-[10px] font-bold uppercase mb-1 text-gray-500">Kode Baru</label><input type="text" id="editKode" class="w-full border p-2 rounded text-sm"></div>
-                    <div><label class="block text-[10px] font-bold uppercase mb-1 text-gray-500">Warna Baru</label><input type="text" id="editWarna" class="w-full border p-2 rounded text-sm"></div>
+                    <div><label class="block text-[10px] font-bold uppercase mb-1 text-gray-500">Kode Baru</label><input type="text" id="editKode" class="w-full border p-2 rounded text-sm font-bold"></div>
+                    <div><label class="block text-[10px] font-bold uppercase mb-1 text-gray-500">Warna Baru</label><input type="text" id="editWarna" class="w-full border p-2 rounded text-sm font-bold"></div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div><label class="block text-[10px] font-bold uppercase mb-1 text-gray-500">HPP</label><input type="number" id="editHPP" class="w-full border p-2 rounded text-sm"></div>
-                    <div><label class="block text-[10px] font-bold uppercase mb-1 text-gray-500">Harga Jual</label><input type="number" id="editHarga" class="w-full border p-2 rounded text-sm"></div>
+                    <div><label class="block text-[10px] font-bold uppercase mb-1 text-gray-500">HPP</label><input type="number" id="editHPP" class="w-full border p-2 rounded text-sm font-bold"></div>
+                    <div><label class="block text-[10px] font-bold uppercase mb-1 text-gray-500">Harga Jual</label><input type="number" id="editHarga" class="w-full border p-2 rounded text-sm font-bold"></div>
                 </div>
-                <div><label class="block text-[10px] font-bold text-red-600 uppercase mb-1 italic">Update Stok Langsung</label><input type="number" id="editStok" class="w-full border-2 border-red-100 p-2 rounded font-bold text-sm bg-red-50 text-red-700"></div>
+                <div class="bg-red-50 p-2 rounded-lg border border-red-100">
+                    <label class="block text-[10px] font-bold text-red-600 uppercase mb-1 italic">Ketik Stok Baru di Sini</label>
+                    <input type="number" id="editStok" required class="w-full border-2 border-red-200 p-2 rounded font-bold text-sm bg-white text-red-700 text-center outline-none focus:ring-2 focus:ring-red-500">
+                    <p class="text-[9px] text-red-400 mt-1">*Jika stok bertambah, akan otomatis muncul di Log Dashboard.</p>
+                </div>
                 <div class="flex items-center gap-4 py-2 border-t">
-                    <img id="editFotoPreview" class="w-14 h-14 object-cover rounded border bg-gray-100 shadow-sm">
+                    <img id="editFotoPreview" class="w-14 h-14 object-cover rounded border bg-gray-100 shadow-sm" src="">
                     <div class="flex-1">
-                        <label class="block text-[10px] font-bold uppercase mb-1 text-gray-500">Ganti Foto Produk</label>
-                        <input type="file" accept="image/*" onchange="handleEditImage(this)" class="text-[10px] w-full">
+                        <label class="block text-[10px] font-bold uppercase mb-1 text-gray-500">Poto Produk</label>
+                        <input type="file" accept="image/*" onchange="handleEditImage(this)" class="text-[10px] w-full font-bold">
                     </div>
                     <input type="hidden" id="editFotoBase64">
                 </div>
                 <div class="flex gap-2 pt-2">
-                    <button type="submit" class="flex-1 bg-navy-700 text-white font-bold py-2 rounded hover:bg-navy-800 transition">Update Data</button>
-                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 text-xs text-gray-500 bg-gray-100 rounded hover:bg-gray-200 transition">Batal</button>
+                    <button type="submit" class="flex-1 bg-navy-700 text-white font-bold py-2 rounded hover:bg-navy-800 transition font-bold uppercase tracking-widest text-xs">Simpan Perubahan</button>
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 text-xs text-gray-500 bg-gray-100 rounded hover:bg-gray-200 transition font-bold">Batal</button>
                 </div>
             </form>
         </div>
@@ -351,13 +358,13 @@
                 const logM = document.getElementById('logMasukContainer'); logM.innerHTML = '';
                 if(d.logMasuk.length === 0) logM.innerHTML = '<p class="text-center p-4 text-xs text-gray-400">Belum ada stok masuk</p>';
                 d.logMasuk.forEach(x => {
-                    logM.innerHTML += `<div class="p-2 flex items-center gap-3 hover:bg-gray-50 transition rounded"><img src="${x.foto || ''}" class="w-10 h-10 rounded object-cover border cursor-pointer" onclick="openModal('${x.foto}')"><div><p class="font-bold text-xs">${x.kode} - ${x.warna || '-'}</p><p class="text-[8px] text-gray-400">${x.waktu}</p></div><div class="ml-auto text-green-600 font-bold text-xs">+${x.jumlah}</div></div>`;
+                    logM.innerHTML += `<div class="p-2 flex items-center gap-3 hover:bg-gray-50 transition rounded"><img src="${x.foto || ''}" class="w-10 h-10 rounded object-cover border cursor-pointer bg-white" onclick="openModal('${x.foto}')"><div><p class="font-bold text-xs">${x.kode} - ${x.warna || '-'}</p><p class="text-[8px] text-gray-400">${x.waktu}</p></div><div class="ml-auto text-green-600 font-bold text-xs">+${x.jumlah}</div></div>`;
                 });
 
                 const logK = document.getElementById('logKeluarContainer'); logK.innerHTML = '';
                 if(d.logKeluar.length === 0) logK.innerHTML = '<p class="text-center p-4 text-xs text-gray-400">Belum ada penjualan</p>';
                 d.logKeluar.forEach(x => {
-                    logK.innerHTML += `<div class="p-2 flex items-center gap-3 hover:bg-gray-50 transition rounded"><img src="${x.foto || ''}" class="w-10 h-10 rounded object-cover border cursor-pointer" onclick="openModal('${x.foto}')"><div><p class="font-bold text-xs">${x.kode} - ${x.warna || '-'}</p><p class="text-[8px] text-gray-400 uppercase font-semibold">${x.marketplace} | ${x.waktu}</p></div><div class="ml-auto text-red-600 font-bold text-xs">-${x.jumlah}</div></div>`;
+                    logK.innerHTML += `<div class="p-2 flex items-center gap-3 hover:bg-gray-50 transition rounded"><img src="${x.foto || ''}" class="w-10 h-10 rounded object-cover border cursor-pointer bg-white" onclick="openModal('${x.foto}')"><div><p class="font-bold text-xs">${x.kode} - ${x.warna || '-'}</p><p class="text-[8px] text-gray-400 uppercase font-semibold">${x.marketplace} | ${x.waktu}</p></div><div class="ml-auto text-red-600 font-bold text-xs">-${x.jumlah}</div></div>`;
                 });
 
                 fetchNotifications();
@@ -371,8 +378,8 @@
                 const data = await res.json();
                 const list = document.getElementById('notifList'); list.innerHTML = '';
                 if(data.length === 0) list.innerHTML = '<p class="p-4 text-center text-xs text-gray-400">Tidak ada notifikasi baru</p>';
-                data.slice(0, 10).forEach(n => {
-                    list.innerHTML += `<div class="p-3 hover:bg-gray-50 transition"><p class="text-[8px] font-bold text-blue-600 uppercase mb-0.5">${n.tipe} | ${n.waktu}</p><p class="text-xs text-navy-800 leading-tight">${n.pesan}</p></div>`;
+                data.slice(0, 15).forEach(n => {
+                    list.innerHTML += `<div class="p-3 hover:bg-gray-50 transition border-l-4 ${n.tipe.toLowerCase().includes('tambah') ? 'border-green-500' : 'border-blue-500'}"><p class="text-[8px] font-bold text-navy-800 uppercase mb-0.5">${n.tipe} | ${n.waktu}</p><p class="text-xs text-navy-600 leading-tight font-bold">${n.pesan}</p></div>`;
                 });
                 const badge = document.getElementById('notifBadge');
                 if(data.length > 0) { badge.innerText = data.length > 9 ? '9+' : data.length; badge.classList.remove('hidden'); }
@@ -406,9 +413,9 @@
             const q = document.getElementById('searchBarang').value.toLowerCase().trim();
             const tbody = document.getElementById('itemsTbody'); tbody.innerHTML = '';
             cachedItems.filter(i => String(i.kode).toLowerCase().includes(q) || String(i.warna).toLowerCase().includes(q)).forEach((it) => {
-                const img = it.foto ? `<img src="${it.foto}" onclick="openModal('${it.foto}')" class="w-11 h-11 mx-auto object-cover rounded cursor-pointer border shadow-sm">` : '📷';
+                const img = it.foto ? `<img src="${it.foto}" onclick="openModal('${it.foto}')" class="w-11 h-11 mx-auto object-cover rounded cursor-pointer border shadow-sm bg-white">` : '📷';
                 const idx = cachedItems.indexOf(it);
-                tbody.innerHTML += `<tr class="hover:bg-gray-50 transition-colors"><td class="p-4 text-center">${img}</td><td class="p-4 font-bold text-navy-700">${it.kode}</td><td class="p-4 font-medium">${it.warna || "-"}</td><td class="p-4 text-gray-400">${formatRupiah(it.hpp)}</td><td class="p-4 font-semibold">${formatRupiah(it.harga)}</td><td class="p-4 font-bold ${it.stok <= 5 ? 'text-red-500 bg-red-50' : 'text-green-600 bg-green-50'} text-center rounded">${it.stok}</td><td class="p-4 text-center space-x-2"><button onclick="openEditModal(${idx})" class="text-blue-500 p-2 hover:bg-blue-100 rounded-lg transition">✏️</button><button onclick="confirmDeleteMaster(${idx})" class="text-red-500 p-2 hover:bg-red-100 rounded-lg transition">🗑️</button></td></tr>`;
+                tbody.innerHTML += `<tr class="hover:bg-gray-50 transition-colors"><td class="p-4 text-center">${img}</td><td class="p-4 font-bold text-navy-700">${it.kode}</td><td class="p-4 font-medium">${it.warna || "-"}</td><td class="p-4 text-gray-400 font-bold">${formatRupiah(it.hpp)}</td><td class="p-4 font-bold">${formatRupiah(it.harga)}</td><td class="p-4 font-bold ${it.stok <= 5 ? 'text-red-500 bg-red-50' : 'text-green-600 bg-green-50'} text-center rounded">${it.stok}</td><td class="p-4 text-center space-x-2"><button onclick="openEditModal(${idx})" class="text-blue-500 p-2 hover:bg-blue-100 rounded-lg transition font-bold" title="Ubah Stok/Harga">✏️</button><button onclick="confirmDeleteMaster(${idx})" class="text-red-500 p-2 hover:bg-red-100 rounded-lg transition" title="Hapus Permanen">🗑️</button></td></tr>`;
             });
         }
 
@@ -436,17 +443,12 @@
             
             showLoading(true);
             try {
-                // Verifikasi URL dengan memanggil dashboard secara pasif
                 const res = await fetch(`${url}?action=getDashboard`);
                 if (res.ok) {
-                    // Berhasil: Simpan ke Global dan LocalStorage
                     localStorage.setItem('fshn_script_url', url);
                     SCRIPT_URL = url;
-                    
                     updateConnectionBadge(true);
-                    showToast("Koneksi berhasil terhubung!", true);
-                    
-                    // LANGSUNG AMBIL DATA (Tanpa reload agar kolom tidak kosong)
+                    showToast("Koneksi berhasil terhubung ke Spreadsheet!", true);
                     await loadDashboard();
                     await fetchItems();
                     await fetchFees();
@@ -531,7 +533,7 @@
             const container = document.getElementById('variantsContainer');
             const div = document.createElement('div');
             div.className = "variant-row grid grid-cols-12 gap-2 p-3 bg-gray-50 rounded-lg shadow-inner";
-            div.innerHTML = `<div class="col-span-6"><label class="block text-[8px] font-bold mb-1 uppercase text-gray-400">Warna</label><input type="text" class="var-warna w-full border p-2 rounded text-xs outline-none focus:ring-1 focus:ring-blue-300" placeholder="Navy / Hitam"></div><div class="col-span-3"><label class="block text-[8px] font-bold mb-1 uppercase text-gray-400">Qty</label><input type="number" class="var-jumlah w-full border p-2 rounded text-xs outline-none focus:ring-1 focus:ring-blue-300" placeholder="0"></div><div class="col-span-3 flex items-center gap-2 pt-4"><label class="h-9 w-9 bg-white border-2 border-dashed rounded cursor-pointer flex items-center justify-center overflow-hidden hover:border-blue-400 transition"><img class="var-prev hidden w-full h-full object-cover shadow-sm"><span class="text-sm">📷</span><input type="file" class="hidden" accept="image/*" onchange="handleVarImg(this)"></label><input type="hidden" class="var-base64"><button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400 font-bold hover:text-red-600 transition p-2">&times;</button></div>`;
+            div.innerHTML = `<div class="col-span-6"><label class="block text-[8px] font-bold mb-1 uppercase text-gray-400">Warna</label><input type="text" class="var-warna w-full border p-2 rounded text-xs outline-none focus:ring-1 focus:ring-blue-300 font-bold" placeholder="Navy / Hitam"></div><div class="col-span-3"><label class="block text-[8px] font-bold mb-1 uppercase text-gray-400">Qty</label><input type="number" class="var-jumlah w-full border p-2 rounded text-xs outline-none focus:ring-1 focus:ring-blue-300 font-bold" placeholder="0"></div><div class="col-span-3 flex items-center gap-2 pt-4"><label class="h-9 w-9 bg-white border-2 border-dashed rounded cursor-pointer flex items-center justify-center overflow-hidden hover:border-blue-400 transition"><img class="var-prev hidden w-full h-full object-cover shadow-sm"><span class="text-sm">📷</span><input type="file" class="hidden" accept="image/*" onchange="handleVarImg(this)"></label><input type="hidden" class="var-base64"><button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-400 font-bold hover:text-red-600 transition p-2">&times;</button></div>`;
             container.appendChild(div);
         }
 
@@ -577,7 +579,7 @@
             div.className = "variant-keluar-row p-2 border rounded bg-gray-50 flex gap-2 items-center shadow-sm";
             let opt = `<option value="">-- Pilih Warna --</option>`;
             variants.forEach(v => opt += `<option value="${v.warna || 'NO_COLOR'}">${v.warna || 'Polos'} (Stok: ${v.stok})</option>`);
-            div.innerHTML = `<select class="var-out-warna flex-1 border p-1 rounded text-xs bg-white outline-none focus:ring-1 focus:ring-red-300" onchange="updateAllProfit()">${opt}</select><input type="number" class="var-out-jumlah w-20 border p-1 rounded text-xs outline-none focus:ring-1 focus:ring-red-300" oninput="updateAllProfit()" placeholder="Qty">`;
+            div.innerHTML = `<select class="var-out-warna flex-1 border p-1 rounded text-xs bg-white outline-none focus:ring-1 focus:ring-red-300 font-bold" onchange="updateAllProfit()">${opt}</select><input type="number" class="var-out-jumlah w-20 border p-1 rounded text-xs outline-none focus:ring-1 focus:ring-red-300 font-bold" oninput="updateAllProfit()" placeholder="Qty">`;
             document.getElementById('variantsKeluarContainer').appendChild(div);
         }
 
@@ -638,7 +640,11 @@
         async function submitEdit(e) {
             e.preventDefault();
             const p = { action: 'updateItem', originalKode: document.getElementById('editOriginalKode').value, originalWarna: document.getElementById('editOriginalWarna').value, newKode: document.getElementById('editKode').value, newWarna: document.getElementById('editWarna').value, hpp: document.getElementById('editHPP').value, harga: document.getElementById('editHarga').value, foto: document.getElementById('editFotoBase64').value, stok: document.getElementById('editStok').value };
-            if(await postData(p)) { closeEditModal(); fetchItems(); }
+            if(await postData(p)) { 
+                closeEditModal(); 
+                fetchItems(); 
+                loadDashboard(); // REFRESH DASHBOARD AGAR LOG MASUK & NOTIF MUNCUL
+            }
         }
 
         function confirmDeleteMaster(idx) {
