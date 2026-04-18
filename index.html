@@ -29,11 +29,13 @@
 </head>
 <body class="bg-gray-100 min-h-screen text-navy-800">
 
+    <!-- Loading Overlay -->
     <div id="loading" class="fixed inset-0 bg-white/80 z-50 flex flex-col justify-center items-center hidden">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-navy-700"></div>
         <p class="mt-4 text-navy-700 font-medium">Memproses Data...</p>
     </div>
 
+    <!-- Notification Toast -->
     <div id="toast" class="fixed top-5 right-5 z-50 p-4 rounded-lg shadow-lg text-white font-medium transform transition-all duration-300 translate-x-full opacity-0"></div>
 
     <!-- Modal Zoom View -->
@@ -42,13 +44,74 @@
         <p class="text-white mt-4 text-sm font-medium">Klik di mana saja untuk menutup</p>
     </div>
 
+    <!-- Modal Konfirmasi Hapus -->
+    <div id="confirmModal" class="fixed inset-0 bg-black/60 z-[70] hidden flex flex-col justify-center items-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 text-center transform scale-95 transition-transform">
+            <h3 class="text-xl font-bold text-navy-800 mb-2">Hapus Barang?</h3>
+            <p id="confirmMessage" class="text-sm text-gray-600 mb-6"></p>
+            <div class="flex justify-center gap-3">
+                <button onclick="closeConfirmModal()" class="flex-1 px-4 py-2.5 bg-gray-100 rounded-lg font-medium">Batal</button>
+                <button id="confirmActionBtn" class="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-bold shadow-md">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Edit Barang -->
+    <div id="editModal" class="fixed inset-0 bg-black/60 z-[65] hidden flex flex-col justify-center items-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 transform scale-95 transition-transform max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="text-xl font-bold text-navy-800">Edit Data Barang</h3>
+                <button onclick="closeEditModal()" class="text-gray-400 hover:text-red-500 transition text-2xl">&times;</button>
+            </div>
+            <form id="formEdit" onsubmit="submitEdit(event)" class="space-y-4">
+                <input type="hidden" id="editOriginalKode">
+                <input type="hidden" id="editOriginalWarna">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold mb-1 uppercase">Kode Barang</label>
+                        <input type="text" id="editKode" required class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-navy-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1 uppercase">Warna</label>
+                        <input type="text" id="editWarna" class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-navy-500 text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold mb-1 uppercase">HPP</label>
+                        <input type="number" id="editHPP" required class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-navy-500 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold mb-1 uppercase">Harga Jual</label>
+                        <input type="number" id="editHarga" required class="w-full border p-2 rounded outline-none focus:ring-2 focus:ring-navy-500 text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold mb-1 uppercase text-red-600">Edit Stok Manual</label>
+                    <input type="number" id="editStok" required class="w-full border-2 border-red-100 p-2 rounded outline-none focus:ring-2 focus:ring-red-500 bg-red-50 font-bold text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold mb-1 uppercase">Foto Barang</label>
+                    <div class="flex items-center gap-4">
+                        <img id="editFotoPreview" class="w-16 h-16 object-cover rounded border bg-gray-50" src="">
+                        <input type="file" accept="image/*" onchange="handleEditImage(this)" class="text-xs">
+                        <input type="hidden" id="editFotoBase64">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-3 pt-4 border-t">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-gray-100 rounded-lg text-sm font-medium">Batal</button>
+                    <button type="submit" class="px-4 py-2 bg-navy-700 text-white rounded-lg shadow-sm font-bold text-sm">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Sidebar & Layout -->
     <div class="flex flex-col md:flex-row min-h-screen">
         <aside class="w-full md:w-64 bg-navy-900 text-white flex-shrink-0 shadow-xl z-20">
-            <!-- LOGO SECTION -->
             <div class="p-6 border-b border-navy-700 flex flex-col items-center text-center">
                 <div id="logoContainer" class="mb-2">
-                    <img id="mainLogoImg" src="" class="h-16 w-16 mb-2 hidden object-contain rounded-lg bg-white p-1">
+                    <img id="mainLogoImg" src="" class="h-16 w-16 mb-2 hidden object-contain rounded-lg bg-white p-1 shadow-inner">
                     <div id="mainLogoText" class="text-2xl font-bold text-blue-400">FSHN.ID</div>
                 </div>
                 <p id="subLogoText" class="text-[10px] text-navy-100 uppercase tracking-widest font-semibold">Sistem Managemen Barang</p>
@@ -273,7 +336,7 @@
                                 <span id="grandTotalProfit" class="text-3xl font-bold text-blue-300">Rp 0</span>
                             </div>
                         </div>
-                        <button type="submit" class="w-full bg-red-600 text-white font-bold py-3 rounded-md mt-2 shadow-lg hover:bg-red-700">Catat Penjualan</button>
+                        <button type="submit" class="w-full bg-red-600 text-white font-bold py-3 rounded-md mt-2 shadow-lg hover:bg-red-700 transition">Catat Penjualan</button>
                     </form>
                 </div>
             </section>
@@ -283,7 +346,7 @@
                     <div class="p-4 border-b bg-gray-50 space-y-3">
                         <div class="flex justify-between items-center">
                             <h3 class="text-lg font-bold">Daftar Semua Barang</h3>
-                            <button onclick="fetchItems()" class="text-sm text-blue-600 font-medium">🔄 Refresh</button>
+                            <button onclick="fetchItems()" class="text-sm text-blue-600 font-medium hover:underline">🔄 Refresh</button>
                         </div>
                         <div class="relative group">
                             <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">🔍</span>
@@ -304,10 +367,10 @@
                 </div>
             </section>
 
-            <!-- 8. PENGATURAN -->
+            <!-- PENGATURAN -->
             <section id="pengaturan" class="tab-content">
                 <div class="bg-white p-6 rounded-lg shadow-sm max-w-2xl mx-auto border-t-4 border-blue-500 mb-6">
-                    <h3 class="text-xl font-bold text-navy-800 mb-4">⚙️ Konfigurasi Logo & Judul</h3>
+                    <h3 class="text-xl font-bold text-navy-800 mb-4 uppercase tracking-tight">⚙️ Konfigurasi Logo & Judul</h3>
                     <div class="space-y-4 bg-gray-50 p-4 rounded-lg border">
                          <div><label class="block text-xs font-bold mb-1 uppercase">Teks Judul Utama</label><input type="text" id="setLogoText" placeholder="FSHN.ID" class="w-full border p-2 rounded text-sm outline-none"></div>
                          <div><label class="block text-xs font-bold mb-1 uppercase">Teks Sub-Judul</label><input type="text" id="setSubText" placeholder="Sistem Managemen Barang" class="w-full border p-2 rounded text-sm outline-none"></div>
@@ -316,7 +379,7 @@
                             <input type="file" accept="image/*" onchange="previewImg(this, 'setLogo')" class="text-xs w-full mb-2">
                             <input type="hidden" id="setLogoBase64">
                             <div id="setLogoPreviewBox" class="hidden">
-                                <img id="setLogoPreviewImg" src="" class="h-20 w-20 object-contain rounded border bg-white">
+                                <img id="setLogoPreviewImg" src="" class="h-20 w-20 object-contain rounded border bg-white shadow-sm">
                             </div>
                          </div>
                          <button onclick="saveLogoSettings()" class="w-full bg-navy-700 text-white font-bold py-2 rounded text-sm shadow hover:bg-navy-800 transition">Terapkan Perubahan Logo</button>
@@ -378,6 +441,8 @@
         function formatRupiah(a) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(a || 0); }
         function openModal(src) { if(!src) return; document.getElementById('modalImage').src = src; document.getElementById('imageModal').classList.remove('hidden'); }
         function closeModal() { document.getElementById('imageModal').classList.add('hidden'); }
+        function closeConfirmModal() { document.getElementById('confirmModal').classList.add('hidden'); }
+        function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
 
         function previewImg(input, type) {
             const f = input.files[0]; if(!f) return;
@@ -548,12 +613,84 @@
             const q = document.getElementById('searchBarang').value.toLowerCase();
             document.getElementById('clearSearchBtn').classList.toggle('hidden', q === "");
             const tbody = document.getElementById('itemsTbody'); tbody.innerHTML = '';
-            cachedItems.filter(i => i.kode.toLowerCase().includes(q) || (i.warna && i.warna.toLowerCase().includes(q))).forEach((it, idx) => {
-                const img = it.foto ? `<img src="${it.foto}" onclick="openModal('${it.foto}')" class="w-10 h-10 mx-auto object-cover rounded cursor-pointer border">` : '📷';
-                tbody.innerHTML += `<tr><td class="p-3 text-center">${img}</td><td class="p-3 font-medium">${it.kode}</td><td class="p-3">${it.warna || "-"}</td><td class="p-3">${formatRupiah(it.hpp)}</td><td class="p-3">${formatRupiah(it.harga)}</td><td class="p-3 font-bold">${it.stok}</td><td class="p-3 text-center"><button onclick="showToast('Fitur edit stok sedang dikembangkan')" class="text-blue-500">✏️</button></td></tr>`;
+            cachedItems.filter(i => 
+                i.kode.toLowerCase().includes(q) || 
+                (i.warna && i.warna.toLowerCase().includes(q))
+            ).forEach((it, idx) => {
+                const globalIdx = cachedItems.indexOf(it);
+                const img = it.foto ? `<img src="${it.foto}" onclick="openModal('${it.foto}')" class="w-10 h-10 mx-auto object-cover rounded cursor-pointer border shadow-sm">` : '📷';
+                tbody.innerHTML += `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-3 text-center">${img}</td>
+                    <td class="p-3 font-medium">${it.kode}</td>
+                    <td class="p-3">${it.warna || "-"}</td>
+                    <td class="p-3">${formatRupiah(it.hpp)}</td>
+                    <td class="p-3">${formatRupiah(it.harga)}</td>
+                    <td class="p-3 font-bold ${it.stok <= 5 ? 'text-red-500' : 'text-green-600'}">${it.stok}</td>
+                    <td class="p-3 text-center space-x-3">
+                        <button onclick="openEditModal(${globalIdx})" class="text-blue-500 hover:text-blue-700 transition" title="Edit">✏️</button>
+                        <button onclick="confirmDeleteMaster(${globalIdx})" class="text-red-500 hover:text-red-700 transition" title="Hapus">🗑️</button>
+                    </td>
+                </tr>`;
             });
         }
         function clearSearch() { document.getElementById('searchBarang').value = ""; filterBarang(); }
+
+        // --- EDIT LOGIC ---
+        function openEditModal(idx) {
+            const it = cachedItems[idx];
+            document.getElementById('editOriginalKode').value = it.kode;
+            document.getElementById('editOriginalWarna').value = it.warna || "";
+            document.getElementById('editKode').value = it.kode;
+            document.getElementById('editWarna').value = it.warna || "";
+            document.getElementById('editHPP').value = it.hpp;
+            document.getElementById('editHarga').value = it.harga;
+            document.getElementById('editStok').value = it.stok;
+            document.getElementById('editFotoPreview').src = it.foto || "";
+            document.getElementById('editFotoBase64').value = it.foto || "";
+            document.getElementById('editModal').classList.remove('hidden');
+        }
+
+        function handleEditImage(input) {
+            const f = input.files[0]; if(!f) return;
+            const r = new FileReader(); r.onload = (e) => {
+                const img = new Image(); img.onload = () => {
+                    const c = document.createElement('canvas'); const m = 400; let w=img.width, h=img.height;
+                    if(w>h) { if(w>m) { h*=m/w; w=m; } } else { if(h>m) { w*=m/h; h=m; } }
+                    c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
+                    const b64 = c.toDataURL('image/jpeg', 0.5);
+                    document.getElementById('editFotoBase64').value = b64;
+                    document.getElementById('editFotoPreview').src = b64;
+                }; img.src = e.target.result;
+            }; r.readAsDataURL(f);
+        }
+
+        async function submitEdit(e) {
+            e.preventDefault();
+            const p = {
+                action: 'updateItem',
+                originalKode: document.getElementById('editOriginalKode').value,
+                originalWarna: document.getElementById('editOriginalWarna').value,
+                newKode: document.getElementById('editKode').value,
+                newWarna: document.getElementById('editWarna').value,
+                hpp: document.getElementById('editHPP').value,
+                harga: document.getElementById('editHarga').value,
+                foto: document.getElementById('editFotoBase64').value,
+                stok: document.getElementById('editStok').value
+            };
+            if(await postData(p)) { closeEditModal(); fetchItems(); loadDashboard(); }
+        }
+
+        function confirmDeleteMaster(idx) {
+            const it = cachedItems[idx];
+            document.getElementById('confirmMessage').innerHTML = `Hapus <b>${it.kode}</b> (${it.warna || 'Polos'}) dari sistem secara permanen?`;
+            document.getElementById('confirmModal').classList.remove('hidden');
+            document.getElementById('confirmActionBtn').onclick = async () => {
+                closeConfirmModal();
+                const ok = await postData({ action: 'deleteItem', kode: it.kode, warna: it.warna || "" });
+                if(ok) { fetchItems(); loadDashboard(); }
+            };
+        }
 
         async function fetchFees() {
             if(!SCRIPT_URL) return;
